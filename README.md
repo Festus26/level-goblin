@@ -23,13 +23,13 @@ For local multiplayer, run the Worker with `--var ALLOWED_ORIGINS:http://localho
 
 ## Launch
 
-1. Create a free Cloudflare account. Stay on the Workers Free plan.
-2. From `worker/`, run `npx wrangler login`, then `npx wrangler deploy`. Note the `https://level-goblin.<account>.workers.dev` address.
+1. Create a free Cloudflare account and move the domain's DNS to it. Stay on the Free plans.
+2. From `worker/`, run `npx wrangler login`, then `npx wrangler deploy`. This serves the Worker at `https://api.semihyildirim.dev`. Don't use the `workers.dev` address, because some networks block it.
 3. Create a public GitHub repo and push this project.
 4. In the repo settings:
    - Under **Pages**, set the source to **GitHub Actions**.
-   - Under **Secrets and variables > Actions > Variables**, add `API_URL` with the Worker address.
-5. Add a DNS record: `CNAME levelgoblin -> festus26.github.io`.
+   - Under **Secrets and variables > Actions > Variables**, add `API_URL` with `https://api.semihyildirim.dev`.
+5. Add a DNS record: `CNAME levelgoblin -> festus26.github.io`, set to **DNS only**, or GitHub can't manage its certificate.
 6. Re-run the deploy workflow, then enable **Enforce HTTPS** under Pages once GitHub offers it.
 
 ## Renaming

@@ -3,6 +3,8 @@
   "name": "level-goblin",
   "main": "src/index.ts",
   "compatibility_date": "2026-11-01",
+  // workers.dev is blocked on some networks, including Turkcell, so players use this.
+  "routes": [{ "pattern": "api.semihyildirim.dev", "custom_domain": true }],
   "durable_objects": {
     "bindings": [{ "name": "SESSIONS", "class_name": "SessionRoom" }]
   },
