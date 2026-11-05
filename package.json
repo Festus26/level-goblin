@@ -1,0 +1,16 @@
+{
+  "name": "level-goblin",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p shared --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
