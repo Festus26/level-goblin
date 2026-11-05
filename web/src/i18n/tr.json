@@ -136,5 +136,18 @@
   "class.knight": "Şövalye",
   "class.jester": "Soytarı",
   "class.alchemist": "Simyacı",
-  "class.barbarian": "Barbar"
+  "class.barbarian": "Barbar",
+  "race.fox": "Tilki",
+  "race.frog": "Kurbağa",
+  "race.rabbit": "Tavşan",
+  "race.owl": "Baykuş",
+  "race.bull": "Boğa",
+  "race.imp": "Şeytancık",
+  "race.golem": "Golem",
+  "race.vampire": "Vampir",
+  "class.paladin": "Paladin",
+  "class.druid": "Druid",
+  "class.chef": "Aşçı",
+  "class.noble": "Soylu",
+  "class.ninja": "Ninja"
 }

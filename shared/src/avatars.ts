@@ -4,10 +4,12 @@ import type { GameState } from './types.ts';
 export const AVATAR_RACES = [
   'human', 'elf', 'dwarf', 'halfling', 'orc', 'gnome',
   'cat', 'lizard', 'ogre', 'boar', 'skeleton', 'bear',
+  'fox', 'frog', 'rabbit', 'owl', 'bull', 'imp', 'golem', 'vampire',
 ] as const;
 export const AVATAR_CLASSES = [
   'warrior', 'wizard', 'thief', 'cleric', 'bard',
   'pirate', 'knight', 'jester', 'alchemist', 'barbarian',
+  'paladin', 'druid', 'chef', 'noble', 'ninja',
 ] as const;
 
 const combine = (races: readonly string[], classes: readonly string[]): string[] =>
@@ -16,7 +18,8 @@ const combine = (races: readonly string[], classes: readonly string[]): string[]
 /** Must match the drawings made by web/art/avatars/build.py. */
 export const AVATARS: readonly string[] = [
   ...combine(AVATAR_RACES.slice(0, 6), AVATAR_CLASSES.slice(0, 5)),
-  ...combine(AVATAR_RACES.slice(6), AVATAR_CLASSES.slice(5)),
+  ...combine(AVATAR_RACES.slice(6, 12), AVATAR_CLASSES.slice(5, 10)),
+  ...combine(AVATAR_RACES.slice(12), AVATAR_CLASSES.slice(10)),
 ];
 
 export type AvatarMood = 'grin' | 'win' | 'lose';

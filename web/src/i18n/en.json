@@ -136,5 +136,18 @@
   "class.knight": "Knight",
   "class.jester": "Jester",
   "class.alchemist": "Alchemist",
-  "class.barbarian": "Barbarian"
+  "class.barbarian": "Barbarian",
+  "race.fox": "Fox",
+  "race.frog": "Frog",
+  "race.rabbit": "Rabbit",
+  "race.owl": "Owl",
+  "race.bull": "Bull",
+  "race.imp": "Imp",
+  "race.golem": "Golem",
+  "race.vampire": "Vampire",
+  "class.paladin": "Paladin",
+  "class.druid": "Druid",
+  "class.chef": "Chef",
+  "class.noble": "Noble",
+  "class.ninja": "Ninja"
 }

@@ -146,7 +146,7 @@ test('picks a portrait, and it shows on the table and in the log', async ({ page
   await page.getByRole('button', { name: 'English' }).click();
   await page.getByRole('button', { name: 'One-phone game' }).click();
   await page.getByRole('button', { name: 'Change portrait' }).click();
-  await expect(page.locator('.avatar-grid button')).toHaveCount(60);
+  await expect(page.locator('.avatar-grid button')).toHaveCount(100);
   await page.getByRole('button', { name: 'Skeleton Pirate' }).click();
   await page.getByLabel('Player name').fill('Ada');
   await page.getByLabel('Player name').press('Enter');

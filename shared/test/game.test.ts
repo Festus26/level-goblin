@@ -512,8 +512,8 @@ describe('secureDieRoll', () => {
 });
 
 describe('portraits', () => {
-  it('has 60 different portraits', () => {
-    expect(new Set(AVATARS).size).toBe(60);
+  it('has 100 different portraits', () => {
+    expect(new Set(AVATARS).size).toBe(100);
   });
 
   it('keeps a chosen portrait, and lets two players share it', () => {
