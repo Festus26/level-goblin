@@ -7,6 +7,7 @@ import {
   createGame,
   findPlayer,
   parseAction,
+  secureDieRoll,
   strength,
   type Action,
   type ActionContext,
@@ -414,5 +415,12 @@ describe('parseAction', () => {
       type: 'updateCombat',
       helperId: null,
     });
+  });
+});
+
+describe('secureDieRoll', () => {
+  it('only rolls whole numbers from 1 to 6, and reaches every face', () => {
+    const seen = new Set(Array.from({ length: 2000 }, secureDieRoll));
+    expect([...seen].sort()).toEqual([1, 2, 3, 4, 5, 6]);
   });
 });
