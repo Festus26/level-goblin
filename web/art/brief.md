@@ -28,6 +28,7 @@ Status: **approved 2026-11-06.**
 | good | #3F7D3A | players winning a fight |
 | gold-tint | #FBEBB5 | the card of the player whose turn it is |
 | goblin | #7FA650 / #5C7E38 | the mascot only |
+| portrait colors | see `web/art/tokens.json` | skin, hair and cloth in player portraits only |
 | gold-dark | #C08A1E | shading on coins and treasure |
 | leather | #9A6A3C | leather items in art, such as boots and sacks |
 
@@ -62,4 +63,5 @@ No publisher art, characters, card names or card text. Nothing imitating any gam
 ## Changelog
 - 2026-11-05: drafted by the agent.
 - 2026-11-06: approved by the Architect with style A and a sillier goblin. Added gold-dark and leather for the art.
+- 2026-11-06: added portrait colors for the 30 player portraits, pending the Architect's verdict.
 - 2026-11-06: kit approved by the Architect, with the helper and next-turn icons redrawn. Added gold-tint.
