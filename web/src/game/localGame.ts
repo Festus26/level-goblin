@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import {
-  PLAYER_COLORS,
   applyAction,
   createGame,
+  nextColor,
   secureDieRoll,
   type Action,
   type ActionContext,
@@ -46,12 +46,6 @@ const tableContext = (): ActionContext => ({
   now: Date.now(),
   rollDie: secureDieRoll,
 });
-
-/** Picks the first color no one at the table is using. */
-export function nextColor(state: GameState) {
-  const used = new Set(state.players.map((player) => player.color));
-  return PLAYER_COLORS.find((color) => !used.has(color)) ?? PLAYER_COLORS[0];
-}
 
 export function startLocalGame(names: string[], winLevel: number): void {
   let state = createGame({ winLevel, editRights: 'everyone' });

@@ -6,6 +6,8 @@ import {
   combatResult,
   createGame,
   findPlayer,
+  generateSessionCode,
+  normalizeSessionCode,
   parseAction,
   secureDieRoll,
   strength,
@@ -422,5 +424,22 @@ describe('secureDieRoll', () => {
   it('only rolls whole numbers from 1 to 6, and reaches every face', () => {
     const seen = new Set(Array.from({ length: 2000 }, secureDieRoll));
     expect([...seen].sort()).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+});
+
+describe('session codes', () => {
+  it('generates valid codes with no look-alike characters', () => {
+    for (let i = 0; i < 200; i++) {
+      const code = generateSessionCode();
+      expect(code).toMatch(/^[A-HJKMNP-Z2-9]{5}$/);
+      expect(normalizeSessionCode(code)).toBe(code);
+    }
+  });
+
+  it('accepts sloppy typing, and rejects anything that cannot be a code', () => {
+    expect(normalizeSessionCode(' ab-cde ')).toBe('ABCDE');
+    expect(normalizeSessionCode('ABCD')).toBeNull();
+    expect(normalizeSessionCode('ABCD1')).toBeNull();
+    expect(normalizeSessionCode(5)).toBeNull();
   });
 });

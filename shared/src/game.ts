@@ -1,6 +1,7 @@
 import {
   DEFAULT_WIN_LEVEL,
   LIMITS,
+  PLAYER_COLORS,
   type Action,
   type ActionContext,
   type ActionError,
@@ -9,6 +10,7 @@ import {
   type GameState,
   type LogEntry,
   type Player,
+  type PlayerColor,
 } from './types.ts';
 
 export interface NewGameOptions {
@@ -57,6 +59,18 @@ export function canEditPlayer(
     case 'own':
       return actorId === playerId;
   }
+}
+
+/** Whether the actor may pass the turn on. */
+export const canMoveTurn = (state: GameState, actorId: string | null): boolean =>
+  isHostOrTable(state, actorId) ||
+  state.editRights === 'everyone' ||
+  actorId === state.turnPlayerId;
+
+/** Picks the first color no one at the table is using. */
+export function nextColor(state: GameState): PlayerColor {
+  const used = new Set(state.players.map((player) => player.color));
+  return PLAYER_COLORS.find((color) => !used.has(color)) ?? PLAYER_COLORS[0];
 }
 
 export interface CombatResult {
@@ -280,11 +294,7 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
 
     case 'nextTurn':
     case 'setTurn': {
-      const canMoveTurn =
-        isHostOrTable(state, actorId) ||
-        state.editRights === 'everyone' ||
-        actorId === state.turnPlayerId;
-      if (!canMoveTurn) return fail('forbidden');
+      if (!canMoveTurn(state, actorId)) return fail('forbidden');
 
       const targetId =
         action.type === 'setTurn'

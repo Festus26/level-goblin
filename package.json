@@ -4,13 +4,14 @@
   "type": "module",
   "workspaces": [
     "shared",
-    "web"
+    "web",
+    "worker"
   ],
   "scripts": {
     "dev": "npm run dev -w web",
     "build": "npm run build -w web",
     "test": "vitest run",
-    "typecheck": "tsc -p shared && tsc -p web",
+    "typecheck": "tsc -p shared && tsc -p web && tsc -p worker",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

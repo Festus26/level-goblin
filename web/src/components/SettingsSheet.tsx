@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { LIMITS, cleanName } from '@level-goblin/shared';
-import { nextColor } from '../game/localGame.ts';
+import { LIMITS, cleanName, nextColor } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
 import { LanguagePicker } from './LanguagePicker.tsx';

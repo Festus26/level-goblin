@@ -1,0 +1,15 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "level-goblin",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "durable_objects": {
+    "bindings": [{ "name": "SESSIONS", "class_name": "SessionRoom" }]
+  },
+  // The Workers Free plan only allows SQLite-backed Durable Objects.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SessionRoom"] }],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://levelgoblin.semihyildirim.dev",
+    "SESSION_TTL_MS": "604800000"
+  }
+}
