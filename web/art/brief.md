@@ -1,6 +1,6 @@
 # Level Goblin UI brief
 
-Status: **draft, waiting for the Architect's approval.** No kit work starts before that.
+Status: **approved 2026-11-06.**
 
 ## 1. Feeling
 - **Greedy, scrappy, cheeky.** Anti-word: **grim**.
@@ -8,7 +8,13 @@ Status: **draft, waiting for the Architect's approval.** No kit work starts befo
 - Mood references: a tavern tally board, a pirate's ledger, a goblin's stolen treasure. Mood only, never copied.
 
 ## 2. Style
-Picked from the options in `review/style-options.png`. See the changelog.
+**Option A, Chunky Inked** (see `review/style-options.png`).
+
+- **Shapes:** round and chunky. Corner radius 18 px on cards, 14 px on buttons.
+- **Weight:** 3.5 px ink outline in the UI, and a solid ink lip under every raised piece (5 px cards, 4 px buttons). Pressing a button drops it onto its lip.
+- **Art:** 4 px ink stroke on a 64 px icon grid, 6 px on the 128 px mascot grid, round joins and caps.
+- **Ornament:** none on panels. The character comes from the art, not from decoration.
+- **Goblin:** silly rather than mean: round head, big mismatched eyes, huge grin, one gold tooth.
 
 ## 3. Palette
 | Role | Hex | Used for |
@@ -21,6 +27,8 @@ Picked from the options in `review/style-options.png`. See the changelog.
 | danger | #B5301F | destructive actions and the monster winning |
 | good | #3F7D3A | players winning a fight |
 | goblin | #7FA650 / #5C7E38 | the mascot only |
+| gold-dark | #C08A1E | shading on coins and treasure |
+| leather | #9A6A3C | leather items in art, such as boots and sacks |
 
 **Meanings:** gold means "the main thing" or treasure, never a warning. Red means danger, never decoration. Player colors identify players only, and always sit beside the player's name. Winning and losing fights also differ by icon and text, never by red and green alone.
 
@@ -30,7 +38,7 @@ Measured contrast: every text pair above is at least 5.5:1.
 Short and cheeky, but the numbers come first. One or two words on buttons. Sentence case. Motion is bouncy and quick.
 
 ## 5. Type
-Open-license font, picked with the style. It must contain every Turkish letter (çğıöşü ÇĞİÖŞÜ), checked in the font file itself, because a font's "latin-ext" file doesn't guarantee them.
+**Baloo 2** (weights 600 and 800), self-hosted. Any font used must contain every Turkish letter (çğıöşü ÇĞİÖŞÜ), checked in the font file itself, because a font's "latin-ext" file doesn't guarantee them.
 
 - **Pass:** Baloo 2, Grandstander, Rammetto One, Lemon, Rubik.
 - **Fail:** Fredoka, Lilita One, Bowlby One, Chango, Sniglet, Titan One.
@@ -52,3 +60,4 @@ No publisher art, characters, card names or card text. Nothing imitating any gam
 
 ## Changelog
 - 2026-11-05: drafted by the agent.
+- 2026-11-06: approved by the Architect with style A and a sillier goblin. Added gold-dark and leather for the art.
