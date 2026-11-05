@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke="#3A2417" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M26 72 Q26 36 64 36 Q102 36 102 72 Q102 90 90 96 L90 112 Q64 120 38 112 L38 96 Q26 90 26 72 Z" fill="#EFE6D2"/>
+    <g transform="translate(0 4)"><circle cx="46" cy="66" r="12" fill="#3A2417" stroke-width="4"/><circle cx="47" cy="68" r="3" fill="#FBF3DF" stroke="none"/><circle cx="82" cy="66" r="12" fill="#3A2417" stroke-width="4"/><circle cx="83" cy="68" r="3" fill="#FBF3DF" stroke="none"/><path d="M34 50 Q44 42 56 46 M72 46 Q84 42 94 50" fill="none" stroke-width="4"/><path d="M64 76 L58 87 L70 87 Z" fill="#3A2417" stroke-width="3"/><path d="M42 102 Q50 94 58 101 Q66 108 74 101 Q82 94 90 102" fill="none" stroke-width="5"/><path d="M94 56 L88 62 L94 68" fill="none" stroke-width="3"/><path d="M104 62 Q112 74 104 80 Q96 74 104 62 Z" fill="#FBF3DF" stroke-width="3"/></g>
+    <path d="M20 54 L22 32 L34 41 L42 24 L53 40 L64 20 L75 40 L86 24 L94 41 L106 32 L108 54 Q64 42 20 54 Z" fill="#7A5A3C"/><path d="M58 42 L64 58 L70 42 Z" fill="#FBF3DF" stroke-width="3"/>
+  </g>
+</svg>

@@ -18,6 +18,12 @@ LEATHER = "#9A6A3C"
 SKIN = {
     "fair": "#F2CFA6", "tan": "#D9A273", "brown": "#A9714B", "deep": "#85573A",
     "orcTeal": "#7E9C8B", "orcMauve": "#A58FA8", "orcMoss": "#9BA37A",
+    "catGinger": "#E0953F", "catGrey": "#A7A29C", "catCream": "#EFDDB8", "catDark": "#6A5F6E",
+    "lizardTeal": "#5FA8A0", "lizardRust": "#C0704A", "lizardBlue": "#6A90C4", "lizardGold": "#CDB24F",
+    "ogreOlive": "#B8A86F", "ogreBlue": "#8E9BB5", "ogreRose": "#D49A8A",
+    "boarPink": "#E8AFA6", "boarBrown": "#A87C5F", "boarGrey": "#9C8E86",
+    "bone": "#EFE6D2", "boneOld": "#DCCFAE",
+    "bearBrown": "#9A6A3C", "bearHoney": "#D2A258", "bearGrey": "#857B74", "bearPale": "#F0E8D8",
 }
 HAIR = {
     "blond": "#E6C25A", "red": "#C4602D", "brown": "#6E4A2E", "black": INK,
@@ -26,7 +32,8 @@ HAIR = {
 CLOTH = {
     "steel": "#C9C2B0", "blue": "#3F6FA8", "purple": "#7D4FA8", "teal": "#2A9188",
     "plum": "#4B3A5C", "forest": "#3F6B4F", "orange": "#D9742A", "pink": "#CF5A8C",
-    "green": "#3F8F4F", "white": SURFACE,
+    "green": "#3F8F4F", "white": SURFACE, "red": "#B5473A", "black": "#4A3B33",
+    "fur": "#7A5A3C", "furPale": "#CDB994", "furDark": "#5A4A44",
 }
 BLUSH = "#E08A6D"
 
@@ -62,13 +69,65 @@ PORTRAITS = [
     ("gnome", "thief", "deep", "white", "forest", "goldTeeth"),
     ("gnome", "cleric", "brown", "grey", "white", "monocle"),
     ("gnome", "bard", "fair", "red", "green", "freckles"),
+    ("cat", "pirate", "catGinger", "red", "black", "patch"),
+    ("cat", "knight", "catGrey", "grey", "red", "none"),
+    ("cat", "jester", "catCream", "blond", "purple", "blush"),
+    ("cat", "alchemist", "catDark", "black", "teal", "earring"),
+    ("cat", "barbarian", "catGinger", "red", "fur", "scar"),
+    ("lizard", "pirate", "lizardTeal", "black", "red", "goldTeeth"),
+    ("lizard", "knight", "lizardBlue", "black", "orange", "none"),
+    ("lizard", "jester", "lizardGold", "black", "green", "monocle"),
+    ("lizard", "alchemist", "lizardRust", "black", "blue", "none"),
+    ("lizard", "barbarian", "lizardTeal", "black", "furPale", "scar"),
+    ("ogre", "pirate", "ogreOlive", "black", "black", "earring"),
+    ("ogre", "knight", "ogreBlue", "black", "purple", "patch"),
+    ("ogre", "jester", "ogreRose", "black", "teal", "none"),
+    ("ogre", "alchemist", "ogreOlive", "black", "orange", "monocle"),
+    ("ogre", "barbarian", "ogreRose", "black", "fur", "scar"),
+    ("boar", "pirate", "boarBrown", "black", "red", "earring"),
+    ("boar", "knight", "boarPink", "black", "blue", "blush"),
+    ("boar", "jester", "boarGrey", "black", "orange", "none"),
+    ("boar", "alchemist", "boarPink", "black", "green", "monocle"),
+    ("boar", "barbarian", "boarBrown", "black", "furDark", "patch"),
+    ("skeleton", "pirate", "bone", "black", "black", "goldTeeth"),
+    ("skeleton", "knight", "boneOld", "black", "green", "none"),
+    ("skeleton", "jester", "bone", "black", "pink", "none"),
+    ("skeleton", "alchemist", "boneOld", "black", "purple", "monocle"),
+    ("skeleton", "barbarian", "bone", "black", "fur", "none"),
+    ("bear", "pirate", "bearGrey", "black", "blue", "patch"),
+    ("bear", "knight", "bearBrown", "black", "teal", "none"),
+    ("bear", "jester", "bearHoney", "black", "red", "blush"),
+    ("bear", "alchemist", "bearPale", "black", "orange", "none"),
+    ("bear", "barbarian", "bearBrown", "black", "furPale", "goldTeeth"),
 ]
 
 # Where each race's face sits, as a downward shift from the shared position.
-FACE_SHIFT = {"human": 6, "elf": 6, "dwarf": 6, "halfling": 8, "orc": 6, "gnome": 8}
+FACE_SHIFT = {"human": 6, "elf": 6, "dwarf": 6, "halfling": 8, "orc": 6, "gnome": 8,
+              "cat": 8, "lizard": 6, "ogre": 8, "boar": 6, "skeleton": 4, "bear": 8}
 
 
 def ears(race, skin):
+    if race == "lizard":
+        return (f'<path d="M30 58 L8 48 L18 66 L6 76 L20 82 L12 98 L34 92 Z" fill="{skin}"/>'
+                f'<path d="M98 58 L120 48 L110 66 L122 76 L108 82 L116 98 L94 92 Z" fill="{skin}"/>')
+    if race == "boar":
+        return (f'<path d="M30 56 Q8 50 8 74 Q24 80 36 68 Z" fill="{skin}"/>'
+                f'<path d="M98 56 Q120 50 120 74 Q104 80 92 68 Z" fill="{skin}"/>')
+    if race == "cat":
+        return (f'<path d="M24 74 L8 28 L52 50 Z" fill="{skin}"/>'
+                f'<path d="M104 74 L120 28 L76 50 Z" fill="{skin}"/>'
+                f'<path d="M24 58 L16 40 L34 50 Z" fill="{BLUSH}" stroke-width="3"/>'
+                f'<path d="M104 58 L112 40 L94 50 Z" fill="{BLUSH}" stroke-width="3"/>')
+    if race == "bear":
+        return (f'<circle cx="20" cy="56" r="15" fill="{skin}"/>'
+                f'<circle cx="108" cy="56" r="15" fill="{skin}"/>'
+                f'<circle cx="19" cy="55" r="7" fill="{BLUSH}" stroke-width="3"/>'
+                f'<circle cx="109" cy="55" r="7" fill="{BLUSH}" stroke-width="3"/>')
+    if race == "skeleton":
+        return ""
+    if race == "ogre":
+        return (f'<circle cx="13" cy="78" r="8" fill="{skin}"/>'
+                f'<circle cx="115" cy="78" r="8" fill="{skin}"/>')
     if race == "elf":
         return (f'<path d="M34 70 Q14 58 7 35 Q28 40 42 54 Z" fill="{skin}"/>'
                 f'<path d="M94 70 Q114 58 121 35 Q100 40 86 54 Z" fill="{skin}"/>')
@@ -83,6 +142,20 @@ def ears(race, skin):
 
 
 def head(race, skin):
+    if race == "cat":
+        return f'<ellipse cx="64" cy="80" rx="43" ry="37" fill="{skin}"/>'
+    if race == "lizard":
+        return f'<ellipse cx="64" cy="76" rx="38" ry="42" fill="{skin}"/>'
+    if race == "ogre":
+        return (f'<path d="M30 46 Q64 34 98 46 Q116 62 116 90 Q112 120 64 121 '
+                f'Q16 120 12 90 Q12 62 30 46 Z" fill="{skin}"/>')
+    if race == "boar":
+        return f'<ellipse cx="64" cy="78" rx="43" ry="40" fill="{skin}"/>'
+    if race == "skeleton":
+        return (f'<path d="M26 72 Q26 36 64 36 Q102 36 102 72 Q102 90 90 96 L90 112 '
+                f'Q64 120 38 112 L38 96 Q26 90 26 72 Z" fill="{skin}"/>')
+    if race == "bear":
+        return f'<ellipse cx="64" cy="80" rx="44" ry="38" fill="{skin}"/>'
     if race == "elf":
         return f'<ellipse cx="64" cy="76" rx="35" ry="43" fill="{skin}"/>'
     if race == "dwarf":
@@ -159,6 +232,40 @@ def headwear(cls, cloth, race):
                 f'<circle cx="64" cy="{top - 14}" r="11" fill="{GOLD}" stroke-width="4"/>'
                 f'<path d="M26 {top + 8} Q64 {top - 6} 102 {top + 8} L102 {top + 18} Q64 {top + 4} 26 {top + 18} Z" '
                 f'fill="{GOLD}"/>')
+    t = top
+    if cls == "pirate":
+        return (f'<path d="M10 {t + 12} Q30 {t - 6} 38 {t - 26} Q64 {t - 36} 90 {t - 26} '
+                f'Q98 {t - 6} 118 {t + 12} Q64 {t + 2} 10 {t + 12} Z" fill="{cloth}"/>'
+                f'<path d="M20 {t + 7} Q64 {t - 3} 108 {t + 7}" fill="none" stroke="{GOLD}" stroke-width="4"/>'
+                f'<circle cx="64" cy="{t - 14}" r="8" fill="{GOLD}" stroke-width="4"/>')
+    if cls == "knight":
+        return (f'<path d="M62 {t - 18} Q60 {t - 36} 84 {t - 36} Q104 {t - 34} 110 {t - 8} '
+                f'Q94 {t - 24} 74 {t - 14} Z" fill="{cloth}"/>'
+                f'<path d="M22 {t + 8} C22 {t - 32} 106 {t - 32} 106 {t + 8} Z" fill="{CLOTH["steel"]}"/>'
+                f'<path d="M16 {t + 8} H112 V{t + 18} H16 Z" fill="{LEATHER}"/>'
+                f'<circle cx="34" cy="{t + 13}" r="1.6" fill="{GOLD}" stroke-width="3"/>'
+                f'<circle cx="94" cy="{t + 13}" r="1.6" fill="{GOLD}" stroke-width="3"/>'
+                f'<path d="M59 {t + 18} H69 V{t + 34} H59 Z" fill="{CLOTH["steel"]}" stroke-width="4"/>')
+    if cls == "jester":
+        return (f'<path d="M24 {t + 8} Q20 {t - 16} 9 {t - 16} Q24 {t - 34} 52 {t - 10} L50 {t + 4} Z" fill="{cloth}"/>'
+                f'<path d="M104 {t + 8} Q108 {t - 16} 119 {t - 16} Q104 {t - 34} 76 {t - 10} L78 {t + 4} Z" fill="{cloth}"/>'
+                f'<path d="M44 {t + 4} Q50 {t - 28} 64 {t - 30} Q78 {t - 28} 84 {t + 4} Z" fill="{SURFACE}"/>'
+                f'<path d="M20 {t + 6} Q64 {t - 8} 108 {t + 6} L108 {t + 16} Q64 {t + 2} 20 {t + 16} Z" fill="{GOLD}"/>'
+                f'<circle cx="9" cy="{t - 16}" r="5" fill="{GOLD}" stroke-width="3"/>'
+                f'<circle cx="119" cy="{t - 16}" r="5" fill="{GOLD}" stroke-width="3"/>'
+                f'<circle cx="64" cy="{t - 30}" r="5" fill="{GOLD}" stroke-width="3"/>')
+    if cls == "alchemist":
+        return (f'<path d="M24 {t + 12} C24 {t - 32} 104 {t - 32} 104 {t + 12} Z" fill="{LEATHER}"/>'
+                f'<path d="M18 {t + 8} Q64 {t - 6} 110 {t + 8}" fill="none" stroke-width="8"/>'
+                f'<circle cx="46" cy="{t}" r="13" fill="{cloth}" stroke-width="4"/>'
+                f'<circle cx="82" cy="{t}" r="13" fill="{cloth}" stroke-width="4"/>'
+                f'<path d="M40 {t - 5} Q44 {t - 8} 48 {t - 7} M76 {t - 5} Q80 {t - 8} 84 {t - 7}" '
+                f'fill="none" stroke="{SURFACE}" stroke-width="3"/>')
+    if cls == "barbarian":
+        return (f'<path d="M20 {t + 14} L22 {t - 8} L34 {t + 1} L42 {t - 16} L53 {t} L64 {t - 20} '
+                f'L75 {t} L86 {t - 16} L94 {t + 1} L106 {t - 8} L108 {t + 14} Q64 {t + 2} 20 {t + 14} Z" '
+                f'fill="{cloth}"/>'
+                f'<path d="M58 {t + 2} L64 {t + 18} L70 {t + 2} Z" fill="{SURFACE}" stroke-width="3"/>')
     # Bard: a floppy cap with a long feather.
     return (f'<path d="M92 {top - 12} Q116 {top - 33} 124 {top - 32} Q124 {top - 18} 98 {top} Z" '
             f'fill="{SURFACE}" stroke-width="4"/>'
@@ -173,22 +280,28 @@ def thief_mask():
             f'fill="{INK}" stroke-width="3"/>')
 
 
-def eyes(mood, quirk):
+def eyes(mood, quirk, race):
     left, right = (46, 66), (82, 64)
     parts = []
+    socket = INK if race == "skeleton" else SURFACE
+    pupil = SURFACE if race == "skeleton" else INK
     if mood == "win":
         for x, y in (left, (82, 66)):
             parts.append(f'<circle cx="{x}" cy="{y}" r="13" fill="{GOLD}" stroke-width="4"/>'
                          f'<circle cx="{x}" cy="{y}" r="6" fill="{GOLD_DARK}" stroke-width="3"/>')
     elif mood == "lose":
         for x, y, r in ((46, 66, 12), (82, 66, 12)):
-            parts.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{SURFACE}" stroke-width="4"/>'
-                         f'<circle cx="{x + 1}" cy="{y + 2}" r="3" fill="{INK}" stroke="none"/>')
+            parts.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{socket}" stroke-width="4"/>'
+                         f'<circle cx="{x + 1}" cy="{y + 2}" r="3" fill="{pupil}" stroke="none"/>')
     else:
-        parts.append(f'<circle cx="{left[0]}" cy="{left[1]}" r="11" fill="{SURFACE}" stroke-width="4"/>'
-                     f'<circle cx="82" cy="64" r="14" fill="{SURFACE}" stroke-width="4"/>'
-                     f'<circle cx="50" cy="68" r="4.5" fill="{INK}" stroke="none"/>'
-                     f'<circle cx="78" cy="66" r="5.5" fill="{INK}" stroke="none"/>')
+        parts.append(f'<circle cx="{left[0]}" cy="{left[1]}" r="11" fill="{socket}" stroke-width="4"/>'
+                     f'<circle cx="82" cy="64" r="14" fill="{socket}" stroke-width="4"/>')
+        if race in ("lizard", "cat"):
+            parts.append(f'<ellipse cx="50" cy="66" rx="2.5" ry="7" fill="{INK}" stroke="none"/>'
+                         f'<ellipse cx="79" cy="64" rx="3" ry="9" fill="{INK}" stroke="none"/>')
+        else:
+            parts.append(f'<circle cx="50" cy="68" r="4.5" fill="{pupil}" stroke="none"/>'
+                         f'<circle cx="78" cy="66" r="5.5" fill="{pupil}" stroke="none"/>')
     if quirk == "patch":
         parts.append(f'<path d="M26 44 L104 80" fill="none" stroke-width="4"/>'
                      f'<path d="M68 52 H98 Q100 76 83 80 Q66 76 68 52 Z" fill="{INK}" stroke-width="3"/>')
@@ -201,12 +314,28 @@ def eyes(mood, quirk):
 def brows(mood, race):
     if mood == "lose":
         return ('<path d="M34 50 Q44 42 56 46 M72 46 Q84 42 94 50" fill="none" stroke-width="4"/>')
-    if race in ("dwarf", "orc"):
+    if race in ("dwarf", "orc", "ogre"):
         return '<path d="M32 50 L58 56 M96 48 L70 56" fill="none" stroke-width="6"/>'
     return ""
 
 
 def nose(race, skin_shade):
+    if race == "cat":
+        return f'<path d="M58 79 H70 L64 86 Z" fill="{BLUSH}" stroke-width="3"/>'
+    if race == "lizard":
+        return (f'<circle cx="59" cy="80" r="2" fill="{INK}" stroke="none"/>'
+                f'<circle cx="69" cy="80" r="2" fill="{INK}" stroke="none"/>')
+    if race == "ogre":
+        return f'<ellipse cx="64" cy="80" rx="10" ry="7" fill="{skin_shade}" stroke-width="4"/>'
+    if race == "boar":
+        return (f'<ellipse cx="64" cy="82" rx="16" ry="11" fill="{BLUSH}" stroke-width="4"/>'
+                f'<ellipse cx="58" cy="82" rx="2.5" ry="4" fill="{INK}" stroke="none"/>'
+                f'<ellipse cx="70" cy="82" rx="2.5" ry="4" fill="{INK}" stroke="none"/>')
+    if race == "skeleton":
+        return f'<path d="M64 76 L58 87 L70 87 Z" fill="{INK}" stroke-width="3"/>'
+    if race == "bear":
+        return (f'<ellipse cx="64" cy="90" rx="25" ry="17" fill="{PARCHMENT}" stroke-width="4"/>'
+                f'<ellipse cx="64" cy="80" rx="8" ry="6" fill="{INK}" stroke-width="3"/>')
     if race in ("dwarf", "gnome"):
         return f'<ellipse cx="64" cy="79" rx="12" ry="10" fill="{BLUSH}" stroke-width="4"/>'
     if race == "orc":
@@ -218,7 +347,19 @@ def mouth(mood, race, quirk):
     if mood == "lose":
         return '<path d="M42 102 Q50 94 58 101 Q66 108 74 101 Q82 94 90 102" fill="none" stroke-width="5"/>'
     y = 2 if mood == "win" else 0
+    if race == "skeleton":
+        ticks = " ".join(f"M{x} {95 + y} V{106 + y}" for x in (48, 56, 64, 72, 80))
+        gold = (f'<path d="M72 {96 + y} H80 V{106 + y} H72 Z" fill="{GOLD}" stroke-width="3"/>'
+                if quirk == "goldTeeth" else "")
+        return (f'<path d="M40 {96 + y} Q64 {90 + y} 88 {96 + y} L86 {108 + y} Q64 {112 + y} 42 {108 + y} Z" '
+                f'fill="{SURFACE}" stroke-width="4"/>{gold}<path d="{ticks}" fill="none" stroke-width="3"/>')
     grin = f'<path d="M36 {90 + y} Q64 {115 + y} 94 {88 + y} Q64 {98 + y} 36 {90 + y} Z" fill="{INK}" stroke-width="4"/>'
+    if race == "ogre":
+        return (grin + f'<path d="M46 {101 + y} L52 {76 + y} L62 {102 + y} Z" fill="{SURFACE}" stroke-width="3"/>'
+                f'<path d="M78 {101 + y} L84 {84 + y} L88 {98 + y} Z" fill="{SURFACE}" stroke-width="3"/>')
+    if race == "boar":
+        return (grin + f'<path d="M38 {97 + y} L30 {80 + y} L48 {98 + y} Z" fill="{SURFACE}" stroke-width="3"/>'
+                f'<path d="M90 {96 + y} L98 {79 + y} L80 {98 + y} Z" fill="{SURFACE}" stroke-width="3"/>')
     if race == "orc":
         return (grin + f'<path d="M44 {100 + y} L42 {80 + y} L54 {98 + y} Z" fill="{SURFACE}" stroke-width="3"/>'
                 f'<path d="M84 {98 + y} L88 {78 + y} L76 {100 + y} Z" fill="{SURFACE}" stroke-width="3"/>')
@@ -232,6 +373,14 @@ def mouth(mood, race, quirk):
 
 def details(mood, quirk, race):
     parts = []
+    if race == "cat":
+        parts.append('<path d="M28 82 L10 78 M28 90 L10 94 M100 82 L118 78 M100 90 L118 94" '
+                     'fill="none" stroke-width="3"/>')
+    if race == "lizard":
+        for x, y in ((30, 84), (36, 92), (98, 84), (92, 92), (64, 62)):
+            parts.append(f'<circle cx="{x}" cy="{y}" r="2" fill="{INK}" stroke="none"/>')
+    if race == "skeleton":
+        parts.append('<path d="M94 56 L88 62 L94 68" fill="none" stroke-width="3"/>')
     if quirk == "blush":
         parts.append(f'<ellipse cx="34" cy="84" rx="7" ry="4" fill="{BLUSH}" stroke="none"/>'
                      f'<ellipse cx="94" cy="84" rx="7" ry="4" fill="{BLUSH}" stroke="none"/>')
@@ -254,7 +403,7 @@ def portrait(race, cls, skin_name, hair_name, cloth_name, quirk, mood):
     cloth = CLOTH[cloth_name]
     shift = FACE_SHIFT[race]
     mask = thief_mask() if cls == "thief" and quirk != "patch" else ""
-    face = (mask + eyes(mood, quirk) + brows(mood, race) + nose(race, skin)
+    face = (mask + eyes(mood, quirk, race) + brows(mood, race) + nose(race, skin)
             + mouth(mood, race, quirk) + details(mood, quirk, race))
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">\n'
