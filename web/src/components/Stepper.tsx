@@ -1,5 +1,8 @@
+import { Art, type ArtName } from './Art.tsx';
+
 interface StepperProps {
   label: string;
+  art?: ArtName;
   value: number;
   onChange: (delta: number) => void;
   increaseLabel?: string;
@@ -11,6 +14,7 @@ interface StepperProps {
 
 export function Stepper({
   label,
+  art,
   value,
   onChange,
   increaseLabel = `${label} +1`,
@@ -20,7 +24,10 @@ export function Stepper({
 }: StepperProps) {
   return (
     <div className="stepper">
-      <span className="stepper-label">{label}</span>
+      <span className="stepper-label">
+        {art && <Art name={art} size={20} />}
+        {label}
+      </span>
       <div className="stepper-controls">
         <button
           type="button"

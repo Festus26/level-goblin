@@ -40,6 +40,7 @@ export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetPr
       </div>
       <Stepper
         label={t('setup.winLevel')}
+        art="levelBadge"
         value={state.winLevel}
         onChange={(delta) => {
           const winLevel = state.winLevel + delta;

@@ -26,13 +26,14 @@ Status: **approved 2026-11-06.**
 | gold | #E9B23A | the one main action per screen, treasure, the win |
 | danger | #B5301F | destructive actions and the monster winning |
 | good | #3F7D3A | players winning a fight |
+| gold-tint | #FBEBB5 | the card of the player whose turn it is |
 | goblin | #7FA650 / #5C7E38 | the mascot only |
 | gold-dark | #C08A1E | shading on coins and treasure |
 | leather | #9A6A3C | leather items in art, such as boots and sacks |
 
 **Meanings:** gold means "the main thing" or treasure, never a warning. Red means danger, never decoration. Player colors identify players only, and always sit beside the player's name. Winning and losing fights also differ by icon and text, never by red and green alone.
 
-Measured contrast: every text pair above is at least 5.5:1.
+Measured contrast: every text pair passes 4.5:1. The lowest is good on surface, at 4.51:1, so don't lighten that green.
 
 ## 4. Tone
 Short and cheeky, but the numbers come first. One or two words on buttons. Sentence case. Motion is bouncy and quick.
@@ -61,3 +62,4 @@ No publisher art, characters, card names or card text. Nothing imitating any gam
 ## Changelog
 - 2026-11-05: drafted by the agent.
 - 2026-11-06: approved by the Architect with style A and a sillier goblin. Added gold-dark and leather for the art.
+- 2026-11-06: kit approved by the Architect, with the helper and next-turn icons redrawn. Added gold-tint.

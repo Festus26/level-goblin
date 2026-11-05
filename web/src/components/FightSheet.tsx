@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { combatResult, findPlayer, strength } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
+import { Art } from './Art.tsx';
 import { Sheet } from './Sheet.tsx';
 import { Stepper } from './Stepper.tsx';
 
@@ -34,6 +35,7 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
         </label>
         <Stepper
           label={t('fight.monsterLevel')}
+          art="monster"
           value={monsterLevel}
           onChange={(delta) => setMonsterLevel((value) => Math.max(1, value + delta))}
         />
@@ -55,14 +57,17 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
     <Sheet title={t('fight.title')} onClose={onClose}>
       <div className="fight-score" data-players-win={result?.playersWin}>
         <div>
+          <Art name="helpers" size={40} />
           <span>{t('fight.players')}</span>
           <strong>{result?.playerTotal}</strong>
         </div>
         <div>
+          <Art name="monster" size={40} />
           <span>{t('fight.monster')}</span>
           <strong>{result?.monsterTotal}</strong>
         </div>
         <p role="status">
+          <Art name={result?.playersWin ? 'goblinGreedy' : 'goblinGulp'} size={44} />
           {result?.playersWin ? t('fight.playersWin') : t('fight.monsterWins')}
         </p>
       </div>
@@ -70,7 +75,10 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
         {t('fight.fighter')}: <strong>{fighter?.name}</strong>
       </p>
       <label className="field">
-        <span>{t('fight.helper')}</span>
+        <span className="with-art">
+          <Art name="helpers" size={24} />
+          {t('fight.helper')}
+        </span>
         <select
           value={combat.helperId ?? ''}
           onChange={(event) =>
@@ -89,6 +97,7 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
       </label>
       <Stepper
         label={t('fight.monsterLevel')}
+        art="monster"
         value={combat.monsterLevel}
         onChange={(delta) =>
           dispatch({

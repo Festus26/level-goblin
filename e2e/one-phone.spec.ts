@@ -74,9 +74,20 @@ test('undoes a change from the log', async ({ page }) => {
 test('announces the winner and clears it on level loss', async ({ page }) => {
   await startGame(page, ['Ada'], 8);
   await levelUp(page, 'Ada').click();
-  await expect(page.getByText('Ada wins!')).toBeVisible();
+  const celebration = page.getByRole('dialog', { name: 'Ada wins!' });
+  await expect(celebration).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(celebration).toBeHidden();
+  await expect(page.locator('.winner')).toHaveText('Ada wins!');
+
+  // A refresh must not celebrate the same win again.
+  await page.reload();
+  await page.getByRole('button', { name: 'Continue game' }).click();
+  await expect(page.locator('.winner')).toBeVisible();
+  await expect(celebration).toHaveCount(0);
+
   await page.getByRole('button', { name: 'Decrease Level for Ada' }).click();
-  await expect(page.getByText('Ada wins!')).toBeHidden();
+  await expect(page.locator('.winner')).toHaveCount(0);
 });
 
 test('manages players and ends the game', async ({ page }) => {
@@ -105,5 +116,50 @@ test('switches to Turkish and has no sideways scroll at phone width', async ({ p
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow).toBe(0);
-  await page.screenshot({ path: process.env.SHOT_DIR + '/table-tr.png' });
+});
+
+test('fits a 360 px phone, even with large numbers', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await startGame(page, ['Şevval İnci Yıldırımoğlu', 'Bo']);
+  await page.getByRole('button', { name: 'Fight' }).click();
+  await page.getByRole('button', { name: 'Start fight' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  const gearUp = page.getByRole('button', { name: /^Increase Gear/ }).first();
+  for (let i = 0; i < 12; i++) await gearUp.click();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(0);
+});
+
+test('draws every Turkish letter with the site font', async ({ page }) => {
+  await startGame(page, ['ÇĞİÖŞÜ çğıöşü']);
+  await page.evaluate(() => document.fonts.ready);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('DOM.enable');
+  await cdp.send('CSS.enable');
+  const { root } = await cdp.send('DOM.getDocument');
+  const { nodeId } = await cdp.send('DOM.querySelector', {
+    nodeId: root.nodeId,
+    selector: '.player-card h3',
+  });
+  const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId });
+  expect(fonts.length).toBeGreaterThan(0);
+  expect(fonts.every((font) => font.isCustomFont)).toBe(true);
+});
+
+test('makes no third-party requests', async ({ page, baseURL }) => {
+  const outside: string[] = [];
+  page.on('request', (request) => {
+    const url = request.url();
+    if (!url.startsWith(baseURL!) && !url.startsWith('data:')) outside.push(url);
+  });
+  await startGame(page, ['Ada']);
+  await page.getByRole('button', { name: 'Roll' }).click();
+  expect(outside).toEqual([]);
+});
+
+test('keeps Munchkin out of the page', async ({ page }) => {
+  await page.goto('/');
+  expect((await page.content()).toLowerCase()).not.toContain('munchkin');
 });

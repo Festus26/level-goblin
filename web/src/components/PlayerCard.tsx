@@ -1,6 +1,7 @@
 import { canEditPlayer, strength, type Player } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
+import { Art } from './Art.tsx';
 import { Stepper } from './Stepper.tsx';
 
 export function PlayerCard({ game, player }: { game: GameHandle; player: Player }) {
@@ -14,16 +15,19 @@ export function PlayerCard({ game, player }: { game: GameHandle; player: Player 
   return (
     <li className="player-card" data-color={player.color} data-turn={hasTurn}>
       <div className="player-heading">
+        <span className="player-dot" aria-hidden="true" />
         <h3>{player.name}</h3>
         {hasTurn && <span className="badge">{t('player.turn')}</span>}
         <div className="strength">
-          <span>{t('player.strength')}</span>
+          <Art name="sword" size={36} />
+          <span className="visually-hidden">{t('player.strength')}</span>
           <strong>{strength(player)}</strong>
         </div>
       </div>
       <div className="player-stats">
         <Stepper
           label={level}
+          art="levelBadge"
           value={player.level}
           disabled={!canEdit}
           increaseLabel={t('player.increase', { stat: level, name: player.name })}
@@ -34,6 +38,7 @@ export function PlayerCard({ game, player }: { game: GameHandle; player: Player 
         />
         <Stepper
           label={gear}
+          art="helmet"
           value={player.gear}
           disabled={!canEdit}
           signed

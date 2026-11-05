@@ -1,3 +1,5 @@
+import '@fontsource/baloo-2/600.css';
+import '@fontsource/baloo-2/800.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';

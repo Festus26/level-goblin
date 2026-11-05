@@ -71,6 +71,7 @@ export function Setup({ onBack, onStart }: SetupProps) {
 
       <Stepper
         label={t('setup.winLevel')}
+        art="levelBadge"
         value={winLevel}
         onChange={(delta) =>
           setWinLevel((value) =>
