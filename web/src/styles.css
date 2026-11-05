@@ -202,7 +202,15 @@ input, select {
 .player-card[data-color='brown'] { --player: #7c5233; }
 .player-card[data-color='slate'] { --player: #5c6b7a; }
 
-.player-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.player-heading { display: flex; align-items: center; gap: 8px; }
+.player-title {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
 .player-dot {
   flex: none;
   width: 20px;
@@ -230,8 +238,9 @@ input, select {
   font-weight: 800;
 }
 .tag.away { border-style: dashed; color: var(--text-dim); }
-.strength { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-.strength strong { font-size: 2rem; font-weight: 800; line-height: 1; }
+.strength { display: flex; flex: none; align-items: center; gap: 4px; }
+/* Room for two digits, so the heading doesn't shift when strength reaches 10. */
+.strength strong { min-width: 2ch; font-size: 2rem; font-weight: 800; line-height: 1; text-align: right; }
 .player-stats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
 
 .action-bar {

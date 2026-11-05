@@ -258,6 +258,33 @@ test('one-phone mode works with the server down', async ({ browser }) => {
   await expect(strengthOf(page, 'Ada')).toHaveText('2');
 });
 
+for (const width of [360, 412]) {
+  test(`strength keeps its place in the card heading at ${width} px`, async ({ browser }) => {
+    const context = await browser.newContext({ locale: 'tr-TR', viewport: { width, height: 800 } });
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Oturum oluştur' }).click();
+    await page.getByLabel('Adın').fill('Semih');
+    await page.getByRole('button', { name: 'Oturumu oluştur' }).click();
+    await page.getByRole('button', { name: 'Kapat' }).click();
+
+    const heading = page.locator('.player-heading');
+    const strength = heading.locator('.strength');
+    await expect(strength.locator('strong')).toHaveText('1');
+    const before = (await heading.boundingBox())!;
+    const strengthBox = (await strength.boundingBox())!;
+    const nameBox = (await heading.locator('h3').boundingBox())!;
+    // It shares a row with the name, rather than sitting on a line of its own.
+    expect(strengthBox.y).toBeLessThan(nameBox.y + nameBox.height);
+
+    for (let i = 0; i < 9; i++) {
+      await page.getByRole('button', { name: 'Semih: Ekipman artır' }).click();
+    }
+    await expect(strength.locator('strong')).toHaveText('10');
+    expect((await heading.boundingBox())!.height).toBe(before.height);
+  });
+}
+
 test('pressing Enter creates the session', async ({ browser }) => {
   const { page } = await phone(browser);
   await page.goto('/');
