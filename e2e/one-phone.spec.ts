@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 async function startGame(page: Page, names: string[], winClicksDown = 0) {
   await page.goto('/');
   await page.getByRole('button', { name: 'English' }).click();
-  await page.getByRole('button', { name: 'New game on this phone' }).click();
+  await page.getByRole('button', { name: 'One-phone game' }).click();
   const input = page.getByLabel('Player name');
   for (const name of names) {
     await input.fill(name);

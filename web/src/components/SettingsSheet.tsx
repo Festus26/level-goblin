@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { LIMITS, cleanName, nextColor } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
+import { EditRightsPicker } from './EditRightsPicker.tsx';
 import { LanguagePicker } from './LanguagePicker.tsx';
+import { PlayerAdmin } from './PlayerAdmin.tsx';
 import { Sheet } from './Sheet.tsx';
 import { Stepper } from './Stepper.tsx';
 
@@ -15,9 +17,14 @@ interface SettingsSheetProps {
 
 export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetProps) {
   const { t } = useI18n();
-  const { state, dispatch } = game;
+  const { state, me, dispatch, online } = game;
   const [newName, setNewName] = useState('');
+  const isHostPhone = !online || me === state.hostId;
   const isFull = state.players.length >= LIMITS.maxPlayers;
+  const hostIsAway =
+    online !== undefined &&
+    state.hostId !== null &&
+    !online.onlineIds.includes(state.hostId);
 
   function addPlayer() {
     const name = cleanName(newName);
@@ -41,6 +48,7 @@ export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetPr
         label={t('setup.winLevel')}
         art="levelBadge"
         value={state.winLevel}
+        disabled={!isHostPhone}
         onChange={(delta) => {
           const winLevel = state.winLevel + delta;
           if (winLevel >= LIMITS.minWinLevel && winLevel <= LIMITS.maxWinLevel) {
@@ -48,40 +56,26 @@ export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetPr
           }
         }}
       />
+      {online && (
+        <EditRightsPicker
+          value={state.editRights}
+          disabled={!isHostPhone}
+          onChange={(editRights) => dispatch({ type: 'setEditRights', editRights })}
+        />
+      )}
+      {hostIsAway && (
+        <button type="button" className="button" onClick={online.claimHost}>
+          {t('settings.claimHost')}
+        </button>
+      )}
 
       <h3>{t('settings.players')}</h3>
       <ul className="settings-players">
         {state.players.map((player) => (
-          <li key={player.id}>
-            <input
-              key={player.name}
-              aria-label={t('settings.rename', { name: player.name })}
-              defaultValue={player.name}
-              maxLength={LIMITS.maxNameLength}
-              onBlur={(event) => {
-                const name = cleanName(event.target.value);
-                if (name === null) event.target.value = player.name;
-                else if (name !== player.name) {
-                  dispatch({ type: 'updatePlayer', playerId: player.id, name });
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="button small danger"
-              aria-label={t('settings.removePlayer', { name: player.name })}
-              onClick={() => {
-                if (window.confirm(t('settings.confirmRemove', { name: player.name }))) {
-                  dispatch({ type: 'removePlayer', playerId: player.id });
-                }
-              }}
-            >
-              ×
-            </button>
-          </li>
+          <PlayerAdmin key={player.id} game={game} player={player} />
         ))}
       </ul>
-      {!isFull && (
+      {!online && !isFull && (
         <form
           className="inline-form"
           onSubmit={(event) => {
@@ -105,15 +99,17 @@ export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetPr
       <button type="button" className="button" onClick={onLeave}>
         {t('settings.leave')}
       </button>
-      <button
-        type="button"
-        className="button danger"
-        onClick={() => {
-          if (window.confirm(t('settings.confirmEnd'))) onEnd();
-        }}
-      >
-        {t('settings.end')}
-      </button>
+      {isHostPhone && (
+        <button
+          type="button"
+          className="button danger"
+          onClick={() => {
+            if (window.confirm(t('settings.confirmEnd'))) onEnd();
+          }}
+        >
+          {t('settings.end')}
+        </button>
+      )}
     </Sheet>
   );
 }

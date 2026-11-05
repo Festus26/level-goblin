@@ -1,26 +1,31 @@
 import { useEffect, useState } from 'react';
-import { findPlayer } from '@level-goblin/shared';
+import { canMoveTurn, findPlayer, type ActionError } from '@level-goblin/shared';
 import { Art, Die } from '../components/Art.tsx';
 import { FightSheet } from '../components/FightSheet.tsx';
+import { InviteSheet } from '../components/InviteSheet.tsx';
 import { LogSheet } from '../components/LogSheet.tsx';
 import { PlayerCard } from '../components/PlayerCard.tsx';
 import { SettingsSheet } from '../components/SettingsSheet.tsx';
 import { WinSheet } from '../components/WinSheet.tsx';
 import type { GameHandle } from '../game/handle.ts';
-import { useI18n } from '../i18n/i18n.tsx';
+import { useI18n, type MessageKey } from '../i18n/i18n.tsx';
 
-type OpenSheet = 'fight' | 'log' | 'settings' | null;
+type OpenSheet = 'fight' | 'log' | 'settings' | 'invite' | null;
+
+const rejectionKey = (error: ActionError): MessageKey =>
+  error === 'forbidden' ? 'errors.forbidden' : 'errors.rejected';
 
 interface TableProps {
   game: GameHandle;
+  showInvite?: boolean;
   onLeave: () => void;
   onEnd: () => void;
 }
 
-export function Table({ game, onLeave, onEnd }: TableProps) {
+export function Table({ game, showInvite = false, onLeave, onEnd }: TableProps) {
   const { t } = useI18n();
-  const { state, dispatch } = game;
-  const [sheet, setSheet] = useState<OpenSheet>(null);
+  const { state, me, dispatch, online } = game;
+  const [sheet, setSheet] = useState<OpenSheet>(showInvite ? 'invite' : null);
   // Starts as the current winner so that a refresh doesn't celebrate a second time.
   const [celebrated, setCelebrated] = useState(state.winnerId);
   const turnPlayer = findPlayer(state, state.turnPlayerId);
@@ -34,6 +39,28 @@ export function Table({ game, onLeave, onEnd }: TableProps) {
 
   return (
     <main className="page table">
+      {online?.status === 'reconnecting' && (
+        <p className="connection" role="status">
+          {t('online.reconnecting')}
+        </p>
+      )}
+      {online?.rejected && (
+        <button type="button" className="notice" onClick={online.dismissRejected}>
+          {t(rejectionKey(online.rejected))}
+        </button>
+      )}
+      {online && (
+        <div className="session-bar">
+          <span>{t('online.session', { code: online.code })}</span>
+          <button
+            type="button"
+            className="button small"
+            onClick={() => setSheet('invite')}
+          >
+            {t('invite.title')}
+          </button>
+        </div>
+      )}
       {winner && (
         <p className="winner">
           <Art name="coinSack" size={32} />
@@ -47,6 +74,7 @@ export function Table({ game, onLeave, onEnd }: TableProps) {
         <button
           type="button"
           className="button small with-art"
+          disabled={!canMoveTurn(state, me)}
           onClick={() => dispatch({ type: 'nextTurn' })}
         >
           <Art name="signpost" />
@@ -89,6 +117,9 @@ export function Table({ game, onLeave, onEnd }: TableProps) {
       {sheet === 'log' && <LogSheet game={game} onClose={closeSheet} />}
       {sheet === 'settings' && (
         <SettingsSheet game={game} onClose={closeSheet} onLeave={onLeave} onEnd={onEnd} />
+      )}
+      {sheet === 'invite' && online && (
+        <InviteSheet code={online.code} onClose={closeSheet} />
       )}
       {winner && celebrated !== winner.id && (
         <WinSheet name={winner.name} onClose={() => setCelebrated(winner.id)} />

@@ -6,7 +6,7 @@ import { Stepper } from './Stepper.tsx';
 
 export function PlayerCard({ game, player }: { game: GameHandle; player: Player }) {
   const { t } = useI18n();
-  const { state, me, dispatch } = game;
+  const { state, me, dispatch, online } = game;
   const canEdit = canEditPlayer(state, me, player.id);
   const hasTurn = state.turnPlayerId === player.id;
   const level = t('player.level');
@@ -17,6 +17,13 @@ export function PlayerCard({ game, player }: { game: GameHandle; player: Player 
       <div className="player-heading">
         <span className="player-dot" aria-hidden="true" />
         <h3>{player.name}</h3>
+        {online && player.id === me && <span className="tag">{t('player.you')}</span>}
+        {online && player.id === state.hostId && (
+          <span className="tag">{t('settings.host')}</span>
+        )}
+        {online && !online.onlineIds.includes(player.id) && (
+          <span className="tag away">{t('player.away')}</span>
+        )}
         {hasTurn && <span className="badge">{t('player.turn')}</span>}
         <div className="strength">
           <Art name="sword" size={36} />
