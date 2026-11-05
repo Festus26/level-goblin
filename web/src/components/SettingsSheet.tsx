@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { LIMITS, cleanName, nextColor, strength } from '@level-goblin/shared';
+import { LIMITS, cleanName, nextColor, randomAvatar, strength } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
+import { Avatar } from './Avatar.tsx';
 import { EditRightsPicker } from './EditRightsPicker.tsx';
 import { LanguagePicker } from './LanguagePicker.tsx';
 import { PlayerAdmin } from './PlayerAdmin.tsx';
@@ -40,6 +41,7 @@ export function SettingsSheet({
       type: 'addPlayer',
       id: crypto.randomUUID(),
       name,
+      avatar: randomAvatar(),
       color: nextColor(state),
     });
     setNewName('');
@@ -109,7 +111,8 @@ export function SettingsSheet({
           <ul className="settings-players">
             {state.departed.map((player) => (
               <li key={player.id}>
-                <span>
+                <Avatar avatar={player.avatar} size={44} />
+                <span className="grow">
                   {player.name} ({strength(player)})
                 </span>
                 <button

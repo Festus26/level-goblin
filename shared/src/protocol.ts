@@ -21,10 +21,11 @@ export interface CreateSessionRequest {
   name: string;
   editRights: EditRights;
   winLevel: number;
+  avatar?: string;
 }
 
 /** Sends `seatId` to take back a freed seat, or `name` to sit down as someone new. */
-export type JoinRequest = { name: string } | { seatId: string };
+export type JoinRequest = { name: string; avatar?: string } | { seatId: string };
 
 export interface SeatCredentials {
   playerId: string;
@@ -37,7 +38,7 @@ export interface CreateSessionResponse extends SeatCredentials {
 
 export interface SessionInfo {
   isFull: boolean;
-  openSeats: { id: string; name: string }[];
+  openSeats: { id: string; name: string; avatar: string }[];
 }
 
 export type ClientMessage =

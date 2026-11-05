@@ -121,7 +121,13 @@ export class SessionRoom extends DurableObject<Env> {
     });
     const seated = applyAction(
       game,
-      { type: 'addPlayer', id: playerId, name: request.name, color: nextColor(game) },
+      {
+        type: 'addPlayer',
+        id: playerId,
+        name: request.name,
+        color: nextColor(game),
+        ...(request.avatar ? { avatar: request.avatar } : {}),
+      },
       this.context(null),
     );
     if (!seated.ok) return null;
@@ -140,7 +146,7 @@ export class SessionRoom extends DurableObject<Env> {
     const freedSeats = session.game.players.filter((player) => session.seats[player.id]?.open);
     // Someone who left needs a free chair to come back to. A freed seat is already one.
     const returning = isFull ? [] : session.game.departed;
-    const openSeats = [...freedSeats, ...returning].map(({ id, name }) => ({ id, name }));
+    const openSeats = [...freedSeats, ...returning].map(({ id, name, avatar }) => ({ id, name, avatar }));
     return { isFull: isFull && openSeats.length === 0, openSeats };
   }
 
@@ -173,7 +179,13 @@ export class SessionRoom extends DurableObject<Env> {
     const playerId = crypto.randomUUID();
     const seated = applyAction(
       session.game,
-      { type: 'addPlayer', id: playerId, name, color: nextColor(session.game) },
+      {
+        type: 'addPlayer',
+        id: playerId,
+        name,
+        color: nextColor(session.game),
+        ...(request.avatar ? { avatar: request.avatar } : {}),
+      },
       this.context(null),
     );
     if (!seated.ok) return { error: seated.error };

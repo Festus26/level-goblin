@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { canMoveTurn, findPlayer, type ActionError } from '@level-goblin/shared';
 import { Art, Die } from '../components/Art.tsx';
+import { Avatar, PlayerAvatar } from '../components/Avatar.tsx';
 import { FightSheet } from '../components/FightSheet.tsx';
 import { InviteSheet } from '../components/InviteSheet.tsx';
 import { LogSheet } from '../components/LogSheet.tsx';
@@ -66,13 +67,17 @@ export function Table({ game, showInvite = false, onLeave, onLeft, onEnd }: Tabl
       )}
       {winner && (
         <p className="winner">
-          <Art name="coinSack" size={32} />
+          <Avatar avatar={winner.avatar} mood="win" size={40} />
           {t('table.winner', { name: winner.name })}
         </p>
       )}
 
       <div className="turn-bar">
-        <Art name="goblinGrin" size={44} />
+        {turnPlayer ? (
+          <PlayerAvatar state={state} player={turnPlayer} size={44} />
+        ) : (
+          <Art name="goblinGrin" size={44} />
+        )}
         <strong>{turnPlayer && t('table.turn', { name: turnPlayer.name })}</strong>
         <button
           type="button"
@@ -134,7 +139,7 @@ export function Table({ game, showInvite = false, onLeave, onLeft, onEnd }: Tabl
         <InviteSheet code={online.code} onClose={closeSheet} />
       )}
       {winner && celebrated !== winner.id && (
-        <WinSheet name={winner.name} onClose={() => setCelebrated(winner.id)} />
+        <WinSheet winner={winner} onClose={() => setCelebrated(winner.id)} />
       )}
     </main>
   );

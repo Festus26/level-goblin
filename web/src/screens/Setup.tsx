@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { DEFAULT_WIN_LEVEL, LIMITS, cleanName } from '@level-goblin/shared';
+import { DEFAULT_WIN_LEVEL, LIMITS, cleanName, randomAvatar } from '@level-goblin/shared';
+import { AvatarButton } from '../components/AvatarPicker.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { startLocalGame } from '../game/localGame.ts';
 import { useI18n } from '../i18n/i18n.tsx';
@@ -11,15 +12,16 @@ interface SetupProps {
 
 export function Setup({ onBack, onStart }: SetupProps) {
   const { t } = useI18n();
-  const [names, setNames] = useState<string[]>([]);
+  const [players, setPlayers] = useState<{ name: string; avatar: string }[]>([]);
   const [draft, setDraft] = useState('');
+  const [draftAvatar, setDraftAvatar] = useState(randomAvatar);
   const [winLevel, setWinLevel] = useState<number>(DEFAULT_WIN_LEVEL);
-  const isFull = names.length >= LIMITS.maxPlayers;
+  const isFull = players.length >= LIMITS.maxPlayers;
 
   /** Includes a name still in the box, so nobody has to press Add for the last player. */
-  const namesWithDraft = () => {
+  const playersWithDraft = () => {
     const name = cleanName(draft);
-    return name !== null && !isFull ? [...names, name] : names;
+    return name !== null && !isFull ? [...players, { name, avatar: draftAvatar }] : players;
   };
 
   return (
@@ -30,14 +32,26 @@ export function Setup({ onBack, onStart }: SetupProps) {
       <h1>{t('setup.title')}</h1>
 
       <ul className="setup-names">
-        {names.map((name, index) => (
+        {players.map(({ name, avatar }, index) => (
           <li key={`${name}-${index}`}>
-            <span>{name}</span>
+            <AvatarButton
+              value={avatar}
+              size={44}
+              label={t('avatar.changeFor', { name })}
+              onPick={(picked) =>
+                setPlayers(
+                  players.map((player, other) =>
+                    other === index ? { ...player, avatar: picked } : player,
+                  ),
+                )
+              }
+            />
+            <span className="grow">{name}</span>
             <button
               type="button"
               className="button small danger"
               aria-label={t('setup.remove', { name })}
-              onClick={() => setNames(names.filter((_, other) => other !== index))}
+              onClick={() => setPlayers(players.filter((_, other) => other !== index))}
             >
               ×
             </button>
@@ -52,10 +66,17 @@ export function Setup({ onBack, onStart }: SetupProps) {
           className="inline-form"
           onSubmit={(event) => {
             event.preventDefault();
-            setNames(namesWithDraft());
+            setPlayers(playersWithDraft());
             setDraft('');
+            setDraftAvatar(randomAvatar());
           }}
         >
+          <AvatarButton
+            value={draftAvatar}
+            size={44}
+            label={t('avatar.change')}
+            onPick={setDraftAvatar}
+          />
           <input
             aria-label={t('setup.nameLabel')}
             placeholder={t('setup.nameLabel')}
@@ -83,15 +104,15 @@ export function Setup({ onBack, onStart }: SetupProps) {
       <button
         type="button"
         className="button primary"
-        disabled={namesWithDraft().length === 0}
+        disabled={playersWithDraft().length === 0}
         onClick={() => {
-          startLocalGame(namesWithDraft(), winLevel);
+          startLocalGame(playersWithDraft(), winLevel);
           onStart();
         }}
       >
         {t('setup.start')}
       </button>
-      {namesWithDraft().length === 0 && <p className="hint">{t('setup.needPlayer')}</p>}
+      {playersWithDraft().length === 0 && <p className="hint">{t('setup.needPlayer')}</p>}
     </main>
   );
 }

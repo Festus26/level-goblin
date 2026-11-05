@@ -3,6 +3,7 @@ import {
   LIMITS,
   cleanName,
   generateSessionCode,
+  isAvatar,
   normalizeSessionCode,
   type CreateSessionRequest,
   type CreateSessionResponse,
@@ -48,14 +49,20 @@ function parseCreate(body: Record<string, unknown> | null): CreateSessionRequest
   ) {
     return null;
   }
-  return { name, editRights: editRights as EditRights, winLevel: winLevel as number };
+  return {
+    name,
+    editRights: editRights as EditRights,
+    winLevel: winLevel as number,
+    ...(isAvatar(body?.avatar) ? { avatar: body.avatar } : {}),
+  };
 }
 
 function parseJoin(body: Record<string, unknown> | null): JoinRequest | null {
   if (typeof body?.seatId === 'string' && body.seatId.length <= 64) {
     return { seatId: body.seatId };
   }
-  return typeof body?.name === 'string' ? { name: body.name } : null;
+  if (typeof body?.name !== 'string') return null;
+  return { name: body.name, ...(isAvatar(body.avatar) ? { avatar: body.avatar } : {}) };
 }
 
 async function route(request: Request, env: Env, url: URL): Promise<Response> {

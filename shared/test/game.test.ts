@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AVATARS,
   LIMITS,
   applyAction,
+  avatarMood,
+  isAvatar,
   canEditPlayer,
   combatResult,
   createGame,
@@ -505,6 +508,99 @@ describe('secureDieRoll', () => {
   it('only rolls whole numbers from 1 to 6, and reaches every face', () => {
     const seen = new Set(Array.from({ length: 2000 }, secureDieRoll));
     expect([...seen].sort()).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+});
+
+describe('portraits', () => {
+  it('has 60 different portraits', () => {
+    expect(new Set(AVATARS).size).toBe(60);
+  });
+
+  it('keeps a chosen portrait, and lets two players share it', () => {
+    let state = createGame();
+    state = run(state, { type: 'addPlayer', id: 'a', name: 'A', color: 'gold', avatar: 'cat-pirate' });
+    state = run(state, { type: 'addPlayer', id: 'b', name: 'B', color: 'red', avatar: 'cat-pirate' });
+    expect(state.players.map((player) => player.avatar)).toEqual(['cat-pirate', 'cat-pirate']);
+  });
+
+  it('gives a valid portrait when none is chosen', () => {
+    expect(isAvatar(findPlayer(table(), 'bo')?.avatar)).toBe(true);
+  });
+
+  it('changes a portrait, following edit rights', () => {
+    const change = { type: 'updatePlayer', playerId: 'bo', avatar: 'elf-bard' } as const;
+    expect(errorOf(table('own'), change, 'ada')).toBe('forbidden');
+    expect(findPlayer(run(table('own'), change, 'bo'), 'bo')?.avatar).toBe('elf-bard');
+  });
+
+  it('keeps a portrait through leaving and coming back', () => {
+    let state = run(table(), { type: 'updatePlayer', playerId: 'bo', avatar: 'elf-bard' });
+    state = run(state, { type: 'removePlayer', playerId: 'bo' });
+    state = run(state, { type: 'returnPlayer', playerId: 'bo' });
+    expect(findPlayer(state, 'bo')?.avatar).toBe('elf-bard');
+  });
+
+  it('records the portrait in the log', () => {
+    const state = run(table(), { type: 'updatePlayer', playerId: 'bo', avatar: 'elf-bard' });
+    const next = run(state, { type: 'changeLevel', playerId: 'bo', delta: 1 });
+    expect(lastLog(next)?.playerAvatar).toBe('elf-bard');
+  });
+
+  it('only accepts real portraits from outside', () => {
+    expect(parseAction({ type: 'updatePlayer', playerId: 'a', avatar: 'dragon-king' })).toBeNull();
+    expect(
+      parseAction({ type: 'addPlayer', id: 'a', name: 'A', color: 'gold', avatar: 7 }),
+    ).toBeNull();
+    expect(parseAction({ type: 'updatePlayer', playerId: 'a', avatar: 'elf-bard' })).toMatchObject({
+      avatar: 'elf-bard',
+    });
+  });
+
+  it('gives old saves a stable portrait', () => {
+    const state = table();
+    const old = {
+      ...state,
+      players: state.players.map(({ avatar: _avatar, ...player }) => player),
+    } as unknown as GameState;
+    const once = upgradeGame(old);
+    expect(isAvatar(once.players[0]?.avatar)).toBe(true);
+    expect(upgradeGame(old).players[0]?.avatar).toBe(once.players[0]?.avatar);
+  });
+
+  describe('moods', () => {
+    const fight = (monsterLevel: number) =>
+      run(table(), { type: 'startCombat', fighterId: 'ada', monsterLevel });
+
+    it('grins by default', () => {
+      expect(avatarMood(table(), 'ada')).toBe('grin');
+    });
+
+    it('follows the fight for the fighter and helper only', () => {
+      let state = fight(5);
+      expect(avatarMood(state, 'ada')).toBe('lose');
+      expect(avatarMood(state, 'bo')).toBe('grin');
+
+      state = run(state, { type: 'updateCombat', helperId: 'bo', playerBonus: 9 });
+      expect(avatarMood(state, 'ada')).toBe('win');
+      expect(avatarMood(state, 'bo')).toBe('win');
+      expect(avatarMood(state, 'cy')).toBe('grin');
+    });
+
+    it('goes back to a grin when the fight ends', () => {
+      expect(avatarMood(run(fight(5), { type: 'endCombat' }), 'ada')).toBe('grin');
+    });
+
+    it('shows win for the winner and lose for everyone else', () => {
+      const state = run(table('ownAndHost', 5), { type: 'changeLevel', playerId: 'bo', delta: 4 });
+      expect(avatarMood(state, 'bo')).toBe('win');
+      expect(avatarMood(state, 'ada')).toBe('lose');
+    });
+
+    it('lets the end of the game outrank a fight', () => {
+      let state = run(table('ownAndHost', 5), { type: 'changeLevel', playerId: 'bo', delta: 4 });
+      state = run(state, { type: 'startCombat', fighterId: 'bo', monsterLevel: 99 });
+      expect(avatarMood(state, 'bo')).toBe('win');
+    });
   });
 });
 

@@ -3,8 +3,10 @@ import {
   DEFAULT_WIN_LEVEL,
   LIMITS,
   cleanName,
+  randomAvatar,
   type EditRights,
 } from '@level-goblin/shared';
+import { AvatarButton } from '../components/AvatarPicker.tsx';
 import { EditRightsPicker } from '../components/EditRightsPicker.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { createSession } from '../game/api.ts';
@@ -19,6 +21,7 @@ interface CreateSessionProps {
 export function CreateSession({ onBack, onCreated }: CreateSessionProps) {
   const { t } = useI18n();
   const [name, setName] = useState('');
+  const [avatar, setAvatar] = useState(randomAvatar);
   const [editRights, setEditRights] = useState<EditRights>('ownAndHost');
   const [winLevel, setWinLevel] = useState<number>(DEFAULT_WIN_LEVEL);
   const [busy, setBusy] = useState(false);
@@ -29,7 +32,7 @@ export function CreateSession({ onBack, onCreated }: CreateSessionProps) {
     if (cleaned === null || busy) return;
     setBusy(true);
     setFailed(false);
-    const result = await createSession({ name: cleaned, editRights, winLevel });
+    const result = await createSession({ name: cleaned, avatar, editRights, winLevel });
     setBusy(false);
     if (!result.ok) {
       setFailed(true);
@@ -53,14 +56,17 @@ export function CreateSession({ onBack, onCreated }: CreateSessionProps) {
           void submit();
         }}
       >
-        <label className="field">
-          <span>{t('join.yourName')}</span>
-          <input
-            value={name}
-            maxLength={LIMITS.maxNameLength}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
+        <div className="identity">
+          <AvatarButton value={avatar} label={t('avatar.change')} onPick={setAvatar} />
+          <label className="field">
+            <span>{t('join.yourName')}</span>
+            <input
+              value={name}
+              maxLength={LIMITS.maxNameLength}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+        </div>
         <EditRightsPicker value={editRights} onChange={setEditRights} />
         <Stepper
           label={t('setup.winLevel')}

@@ -1,6 +1,7 @@
 import { canEditPlayer, findPlayer, type LogEntry } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n, type MessageKey } from '../i18n/i18n.tsx';
+import { Avatar } from './Avatar.tsx';
 import { Sheet } from './Sheet.tsx';
 
 const signed = (value: number | null) =>
@@ -37,7 +38,14 @@ export function LogSheet({ game, onClose }: { game: GameHandle; onClose: () => v
           const byOther = entry.actorName !== null && entry.actorName !== entry.playerName;
           return (
             <li key={entry.id} data-undone={entry.undone}>
-              <span>
+              {entry.playerAvatar && (
+                <Avatar
+                  avatar={entry.playerAvatar}
+                  mood={entry.type === 'win' ? 'win' : 'grin'}
+                  size={32}
+                />
+              )}
+              <span className="log-text">
                 {t(messageKey(entry), {
                   name: entry.playerName ?? '',
                   value: showsDelta ? signed(entry.value) : (entry.value ?? ''),

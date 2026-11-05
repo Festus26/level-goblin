@@ -270,6 +270,23 @@ test('when the host leaves, another player gets the host controls', async ({ bro
   await expect(bo.page.getByRole('button', { name: 'End game' })).toBeVisible();
 });
 
+test('a portrait chosen when joining shows on every phone, and can be changed', async ({ browser }) => {
+  const [ada, bo] = [await phone(browser), await phone(browser)];
+  const code = await createSession(ada.page, 'Ada');
+  await bo.page.goto(`/?join=${code}`);
+  await bo.page.getByRole('button', { name: 'Change portrait' }).click();
+  await bo.page.getByRole('button', { name: 'Bear Jester' }).click();
+  await bo.page.getByLabel('Your name').fill('Bo');
+  await bo.page.getByRole('button', { name: 'Join the table' }).click();
+  const seen = card(ada.page, 'Bo').locator('.avatar');
+  await expect(seen).toHaveAttribute('data-avatar', 'bear-jester');
+
+  await openSettings(bo.page);
+  await bo.page.getByRole('button', { name: 'Change portrait of Bo' }).click();
+  await bo.page.getByRole('button', { name: 'Ogre Knight' }).click();
+  await expect(seen).toHaveAttribute('data-avatar', 'ogre-knight');
+});
+
 test('ending the session sends everyone home', async ({ browser }) => {
   const [ada, bo] = [await phone(browser), await phone(browser)];
   ada.page.on('dialog', (dialog) => dialog.accept());

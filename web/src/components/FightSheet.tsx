@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { combatResult, findPlayer, strength } from '@level-goblin/shared';
+import { combatResult, findPlayer } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
 import { Art } from './Art.tsx';
+import { PlayerAvatar } from './Avatar.tsx';
+import { PlayerChoice } from './PlayerChoice.tsx';
 import { Sheet } from './Sheet.tsx';
 import { Stepper } from './Stepper.tsx';
 
@@ -23,16 +25,13 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
   if (!combat) {
     return (
       <Sheet title={t('fight.title')} onClose={onClose}>
-        <label className="field">
-          <span>{t('fight.fighter')}</span>
-          <select value={fighterId} onChange={(event) => setFighterId(event.target.value)}>
-            {players.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name} ({strength(player)})
-              </option>
-            ))}
-          </select>
-        </label>
+        <PlayerChoice
+          label={t('fight.fighter')}
+          state={state}
+          players={players}
+          value={fighterId}
+          onChange={(id) => id && setFighterId(id)}
+        />
         <Stepper
           label={t('fight.monsterLevel')}
           art="monster"
@@ -52,12 +51,16 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
 
   const result = combatResult(state);
   const fighter = findPlayer(state, combat.fighterId);
+  const helper = findPlayer(state, combat.helperId);
 
   return (
     <Sheet title={t('fight.title')} onClose={onClose}>
       <div className="fight-score" data-players-win={result?.playersWin}>
         <div>
-          <Art name="helpers" size={40} />
+          <span className="fight-side">
+            {fighter && <PlayerAvatar state={state} player={fighter} size={44} />}
+            {helper && <PlayerAvatar state={state} player={helper} size={44} />}
+          </span>
           <span>{t('fight.players')}</span>
           <strong>{result?.playerTotal}</strong>
         </div>
@@ -72,29 +75,19 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
         </p>
       </div>
       <p className="fight-fighter">
-        {t('fight.fighter')}: <strong>{fighter?.name}</strong>
-      </p>
-      <label className="field">
-        <span className="with-art">
-          <Art name="helpers" size={24} />
-          {t('fight.helper')}
+        {fighter && <PlayerAvatar state={state} player={fighter} size={40} />}
+        <span>
+          {t('fight.fighter')}: <strong>{fighter?.name}</strong>
         </span>
-        <select
-          value={combat.helperId ?? ''}
-          onChange={(event) =>
-            dispatch({ type: 'updateCombat', helperId: event.target.value || null })
-          }
-        >
-          <option value="">{t('fight.noHelper')}</option>
-          {players
-            .filter((player) => player.id !== combat.fighterId)
-            .map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name} ({strength(player)})
-              </option>
-            ))}
-        </select>
-      </label>
+      </p>
+      <PlayerChoice
+        label={t('fight.helper')}
+        state={state}
+        players={players.filter((player) => player.id !== combat.fighterId)}
+        value={combat.helperId}
+        noneLabel={t('fight.noHelper')}
+        onChange={(helperId) => dispatch({ type: 'updateCombat', helperId })}
+      />
       <Stepper
         label={t('fight.monsterLevel')}
         art="monster"

@@ -1,3 +1,4 @@
+import { isAvatar } from './avatars.ts';
 import { LIMITS, PLAYER_COLORS, type Action, type EditRights, type PlayerColor } from './types.ts';
 
 type Input = Record<string, unknown>;
@@ -42,7 +43,14 @@ export function parseAction(input: unknown): Action | null {
     case 'addPlayer': {
       const name = cleanName(input.name);
       if (!isId(input.id) || name === null || !isColor(input.color)) return null;
-      return { type: 'addPlayer', id: input.id, name, color: input.color };
+      if (input.avatar !== undefined && !isAvatar(input.avatar)) return null;
+      return {
+        type: 'addPlayer',
+        id: input.id,
+        name,
+        color: input.color,
+        ...(input.avatar === undefined ? {} : { avatar: input.avatar }),
+      };
     }
 
     case 'removePlayer':
@@ -69,6 +77,10 @@ export function parseAction(input: unknown): Action | null {
       if (input.color !== undefined) {
         if (!isColor(input.color)) return null;
         action.color = input.color;
+      }
+      if (input.avatar !== undefined) {
+        if (!isAvatar(input.avatar)) return null;
+        action.avatar = input.avatar;
       }
       return action;
     }

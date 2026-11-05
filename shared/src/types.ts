@@ -36,6 +36,7 @@ export interface Player {
   id: string;
   name: string;
   color: PlayerColor;
+  avatar: string;
   level: number;
   gear: number;
 }
@@ -83,6 +84,7 @@ export interface LogEntry {
   actorName: string | null;
   playerId: string | null;
   playerName: string | null;
+  playerAvatar: string | null;
   /** Level or gear change, die result, or new win level, depending on `type`. */
   value: number | null;
   /** Which stat an `undo` entry reverted. */
@@ -110,10 +112,10 @@ export interface GameState {
 }
 
 export type Action =
-  | { type: 'addPlayer'; id: string; name: string; color: PlayerColor }
+  | { type: 'addPlayer'; id: string; name: string; color: PlayerColor; avatar?: string }
   | { type: 'removePlayer'; playerId: string }
   | { type: 'returnPlayer'; playerId: string }
-  | { type: 'updatePlayer'; playerId: string; name?: string; color?: PlayerColor }
+  | { type: 'updatePlayer'; playerId: string; name?: string; color?: PlayerColor; avatar?: string }
   | { type: 'changeLevel'; playerId: string; delta: number }
   | { type: 'changeGear'; playerId: string; delta: number }
   | { type: 'undo'; logId: number }

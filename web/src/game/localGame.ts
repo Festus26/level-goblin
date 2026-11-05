@@ -50,15 +50,19 @@ const tableContext = (): ActionContext => ({
   rollDie: secureDieRoll,
 });
 
-export function startLocalGame(names: string[], winLevel: number): void {
+export function startLocalGame(
+  players: { name: string; avatar: string }[],
+  winLevel: number,
+): void {
   let state = createGame({ winLevel, editRights: 'everyone' });
-  for (const name of names) {
+  for (const { name, avatar } of players) {
     const result = applyAction(
       state,
       {
         type: 'addPlayer',
         id: crypto.randomUUID(),
         name,
+        avatar,
         color: nextColor(state),
       },
       tableContext(),

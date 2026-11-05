@@ -52,7 +52,7 @@ test('runs a fight with a helper and bonuses', async ({ page }) => {
   await page.getByRole('button', { name: 'Start fight' }).click();
   await expect(page.getByRole('status')).toHaveText('Monster is winning');
 
-  await page.getByLabel('Helper').selectOption({ label: 'Bo (1)' });
+  await page.getByRole('radio', { name: 'Bo (1)' }).click();
   await page.getByRole('button', { name: 'Player bonus +1' }).click();
   await page.getByRole('button', { name: 'Player bonus +1' }).click();
   await expect(page.getByRole('status')).toHaveText('Players are winning');
@@ -139,6 +139,48 @@ test('a game saved before leaving existed still loads', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Remove Bo' }).click();
   await expect(page.getByRole('button', { name: 'Bring Bo back' })).toBeVisible();
+});
+
+test('picks a portrait, and it shows on the table and in the log', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'English' }).click();
+  await page.getByRole('button', { name: 'One-phone game' }).click();
+  await page.getByRole('button', { name: 'Change portrait' }).click();
+  await expect(page.locator('.avatar-grid button')).toHaveCount(60);
+  await page.getByRole('button', { name: 'Skeleton Pirate' }).click();
+  await page.getByLabel('Player name').fill('Ada');
+  await page.getByLabel('Player name').press('Enter');
+  await page.getByRole('button', { name: 'Start game' }).click();
+
+  const portrait = card(page, 'Ada').locator('.avatar');
+  await expect(portrait).toHaveAttribute('data-avatar', 'skeleton-pirate');
+  await levelUp(page, 'Ada').click();
+  await page.getByRole('button', { name: 'Log', exact: true }).click();
+  await expect(page.locator('.log .avatar').first()).toHaveAttribute('data-avatar', 'skeleton-pirate');
+});
+
+
+test('faces react to fights and to the win', async ({ page }) => {
+  await startGame(page, ['Ada', 'Bo'], 8);
+  const ada = card(page, 'Ada').locator('.avatar');
+  const bo = card(page, 'Bo').locator('.avatar');
+  await expect(ada).toHaveAttribute('data-mood', 'grin');
+
+  await page.getByRole('button', { name: 'Fight' }).click();
+  await page.getByRole('button', { name: 'Monster level +1' }).click();
+  await page.getByRole('button', { name: 'Start fight' }).click();
+  await expect(page.locator('.fight-side .avatar')).toHaveAttribute('data-mood', 'lose');
+  await page.getByRole('button', { name: 'Player bonus +1' }).click();
+  await page.getByRole('button', { name: 'Player bonus +1' }).click();
+  await expect(page.locator('.fight-side .avatar')).toHaveAttribute('data-mood', 'win');
+  await page.getByRole('button', { name: 'End fight' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(ada).toHaveAttribute('data-mood', 'grin');
+
+  await levelUp(page, 'Ada').click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(ada).toHaveAttribute('data-mood', 'win');
+  await expect(bo).toHaveAttribute('data-mood', 'lose');
 });
 
 test('switches to Turkish and has no sideways scroll at phone width', async ({ page }) => {

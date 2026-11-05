@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  isAvatar,
   type Action,
   type ClientMessage,
   type CreateSessionResponse,
@@ -300,7 +301,7 @@ describe('losing and recovering seats', () => {
     expect(await boClient.ended()).toBe('seatLost');
 
     const info = await fetch(`${base(MAIN_PORT)}/sessions/${host.code}`, { headers });
-    expect(((await info.json()) as SessionInfo).openSeats).toEqual([
+    expect(((await info.json()) as SessionInfo).openSeats).toMatchObject([
       { id: bo.playerId, name: 'Bo' },
     ]);
 
@@ -341,6 +342,64 @@ describe('losing and recovering seats', () => {
   });
 });
 
+describe('portraits', () => {
+  const post = (path: string, body: object) =>
+    fetch(`${base(MAIN_PORT)}${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+
+  it('uses the portrait chosen when creating and joining', async () => {
+    const created = await post('/sessions', {
+      name: 'Ada',
+      editRights: 'own',
+      winLevel: 10,
+      avatar: 'cat-pirate',
+    });
+    const host = (await created.json()) as CreateSessionResponse;
+    await join(host.code, { name: 'Bo', avatar: 'cat-pirate' });
+    const ada = new Client(host.code, host.token);
+    const { state } = await ada.stateWhere((game) => game.players.length === 2, 'both seated');
+    expect(state.players.map((player) => player.avatar)).toEqual(['cat-pirate', 'cat-pirate']);
+  });
+
+  it('gives a valid portrait when none, or a fake one, is sent', async () => {
+    const host = await createSession();
+    await join(host.code, { name: 'Bo', avatar: '../../etc/passwd' });
+    const ada = new Client(host.code, host.token);
+    const { state } = await ada.stateWhere((game) => game.players.length === 2, 'both seated');
+    for (const player of state.players) expect(isAvatar(player.avatar)).toBe(true);
+  });
+
+  it('follows edit rights when changing a portrait', async () => {
+    const { host, bo, ada, boClient } = await table('own');
+    boClient.act({ type: 'updatePlayer', playerId: host.playerId, avatar: 'bear-jester' });
+    expect(await boClient.rejection()).toMatchObject({ error: 'forbidden' });
+
+    boClient.act({ type: 'updatePlayer', playerId: bo.playerId, avatar: 'bear-jester' });
+    await ada.stateWhere(
+      (state) => state.players.some((player) => player.avatar === 'bear-jester'),
+      'the new portrait',
+    );
+  });
+
+  it('rejects a portrait that does not exist', async () => {
+    const { bo, boClient } = await table();
+    boClient.act({ type: 'updatePlayer', playerId: bo.playerId, avatar: 'dragon-king' });
+    expect(await boClient.rejection()).toMatchObject({ error: 'invalidAction' });
+  });
+
+  it('shows the portrait on a seat waiting to be taken back', async () => {
+    const { host, bo, boClient } = await table();
+    boClient.act({ type: 'updatePlayer', playerId: bo.playerId, avatar: 'orc-bard' });
+    await boClient.stateWhere(
+      (state) => state.players.some((player) => player.avatar === 'orc-bard'),
+      'the portrait',
+    );
+    boClient.send({ t: 'leave' });
+    await boClient.ended();
+    const info = await fetch(`${base(MAIN_PORT)}/sessions/${host.code}`, { headers });
+    expect(((await info.json()) as SessionInfo).openSeats[0]?.avatar).toBe('orc-bard');
+  });
+});
+
 describe('leaving and joining mid-game', () => {
   it('lets someone join an ongoing game without disturbing it', async () => {
     const { host, bo, ada, boClient } = await table();
@@ -363,7 +422,7 @@ describe('leaving and joining mid-game', () => {
     await ada.stateWhere((state) => state.players.length === 1, 'Bo to leave');
 
     const info = await fetch(`${base(MAIN_PORT)}/sessions/${host.code}`, { headers });
-    expect(((await info.json()) as SessionInfo).openSeats).toEqual([
+    expect(((await info.json()) as SessionInfo).openSeats).toMatchObject([
       { id: bo.playerId, name: 'Bo' },
     ]);
 

@@ -1,3 +1,4 @@
+import { avatarFor } from './avatars.ts';
 import {
   DEFAULT_WIN_LEVEL,
   LIMITS,
@@ -37,10 +38,17 @@ export function createGame(options: NewGameOptions = {}): GameState {
 }
 
 /** Fills in fields added since a game was saved, so old saves keep working. */
-export const upgradeGame = (state: GameState): GameState => ({
-  ...state,
-  departed: state.departed ?? [],
-});
+export function upgradeGame(state: GameState): GameState {
+  const withAvatar = (player: Player): Player => ({
+    ...player,
+    avatar: player.avatar ?? avatarFor(player.id),
+  });
+  return {
+    ...state,
+    players: state.players.map(withAvatar),
+    departed: (state.departed ?? []).map(withAvatar),
+  };
+}
 
 export const strength = (player: Player): number => player.level + player.gear;
 
@@ -122,6 +130,7 @@ function addLog(
     actorName: findPlayer(state, ctx.actorId)?.name ?? null,
     playerId: details.player?.id ?? null,
     playerName: details.player?.name ?? null,
+    playerAvatar: details.player?.avatar ?? null,
     value: details.value ?? null,
     stat: details.stat ?? null,
     undone: false,
@@ -192,6 +201,7 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
         id: action.id,
         name: action.name,
         color: action.color,
+        avatar: action.avatar ?? avatarFor(action.id),
         level: LIMITS.minLevel,
         gear: 0,
       };
@@ -263,6 +273,7 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
         ...player,
         name: action.name ?? player.name,
         color: action.color ?? player.color,
+        avatar: action.avatar ?? player.avatar,
       };
       const next = replacePlayer(state, updated);
       return {

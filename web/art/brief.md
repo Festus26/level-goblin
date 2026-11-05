@@ -63,5 +63,5 @@ No publisher art, characters, card names or card text. Nothing imitating any gam
 ## Changelog
 - 2026-11-05: drafted by the agent.
 - 2026-11-06: approved by the Architect with style A and a sillier goblin. Added gold-dark and leather for the art.
-- 2026-11-06: added portrait colors for the 30 player portraits, pending the Architect's verdict.
+- 2026-11-06: added portrait colors for the player portraits. The Architect approved the first 30 and asked for 30 more.
 - 2026-11-06: kit approved by the Architect, with the helper and next-turn icons redrawn. Added gold-tint.

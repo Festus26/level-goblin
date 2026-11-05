@@ -1,6 +1,8 @@
 import { LIMITS, canEditPlayer, cleanName, type Player } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
+import { AvatarButton } from './AvatarPicker.tsx';
+import { Avatar } from './Avatar.tsx';
 
 /** One row in Settings: rename a player, plus whatever this phone is allowed to do. */
 export function PlayerAdmin({ game, player }: { game: GameHandle; player: Player }) {
@@ -13,6 +15,16 @@ export function PlayerAdmin({ game, player }: { game: GameHandle; player: Player
 
   return (
     <li>
+      {canEditPlayer(state, me, player.id) ? (
+        <AvatarButton
+          value={player.avatar}
+          size={44}
+          label={t('avatar.changeFor', { name: player.name })}
+          onPick={(avatar) => dispatch({ type: 'updatePlayer', playerId: player.id, avatar })}
+        />
+      ) : (
+        <Avatar avatar={player.avatar} size={44} />
+      )}
       <input
         key={player.name}
         aria-label={t('settings.rename', { name: player.name })}

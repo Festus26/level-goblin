@@ -320,6 +320,50 @@ input, select {
 .rights input { flex: none; width: 24px; min-height: 24px; accent-color: var(--ink); }
 .rights:disabled { opacity: 0.6; }
 
+.avatar { flex: none; }
+.avatar-button {
+  flex: none;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: none;
+  cursor: pointer;
+}
+.avatar-button:active { transform: translateY(2px); }
+.avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 4px; }
+.avatar-grid button {
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  border: var(--line) solid transparent;
+  border-radius: var(--radius-button);
+  background: none;
+  cursor: pointer;
+}
+.avatar-grid button[aria-pressed='true'] { border-color: var(--ink); background: var(--gold-tint); }
+.identity { display: flex; align-items: center; gap: 12px; }
+.identity .field { flex: 1; min-width: 0; }
+.grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.player-choice { display: flex; flex-direction: column; gap: 8px; }
+.player-choice button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 4px 12px;
+  border: var(--outline);
+  border-radius: var(--radius-button);
+  background: var(--surface);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.player-choice button[aria-checked='true'] { background: var(--gold-tint); font-weight: 800; }
+.fight-side { display: flex; justify-content: center; }
+.fight-fighter { display: flex; align-items: center; gap: 8px; }
+.log-text { flex: 1; min-width: 0; }
+
 .win { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
 /* Bouncy and quick, per the brief. */

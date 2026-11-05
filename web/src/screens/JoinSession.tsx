@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { LIMITS, cleanName, type JoinRequest, type SessionInfo } from '@level-goblin/shared';
+import {
+  LIMITS,
+  cleanName,
+  randomAvatar,
+  type JoinRequest,
+  type SessionInfo,
+} from '@level-goblin/shared';
+import { Avatar } from '../components/Avatar.tsx';
+import { AvatarButton } from '../components/AvatarPicker.tsx';
 import { getSessionInfo, joinSession, type ApiError } from '../game/api.ts';
 import { saveSeat } from '../game/sessionStore.ts';
 import { useI18n, type MessageKey } from '../i18n/i18n.tsx';
@@ -23,6 +31,7 @@ export function JoinSession({ code, onBack, onJoined }: JoinSessionProps) {
   const [info, setInfo] = useState<SessionInfo | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [name, setName] = useState('');
+  const [avatar, setAvatar] = useState(randomAvatar);
   const [busy, setBusy] = useState(false);
   const cleaned = cleanName(name);
 
@@ -76,6 +85,7 @@ export function JoinSession({ code, onBack, onJoined }: JoinSessionProps) {
               disabled={busy}
               onClick={() => join({ seatId: seat.id })}
             >
+              <Avatar avatar={seat.avatar} size={36} />
               {seat.name}
             </button>
           ))}
@@ -87,17 +97,20 @@ export function JoinSession({ code, onBack, onJoined }: JoinSessionProps) {
           className="stack"
           onSubmit={(event) => {
             event.preventDefault();
-            if (cleaned !== null) join({ name: cleaned });
+            if (cleaned !== null) join({ name: cleaned, avatar });
           }}
         >
-          <label className="field">
-            <span>{t('join.yourName')}</span>
-            <input
-              value={name}
-              maxLength={LIMITS.maxNameLength}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
+          <div className="identity">
+            <AvatarButton value={avatar} label={t('avatar.change')} onPick={setAvatar} />
+            <label className="field">
+              <span>{t('join.yourName')}</span>
+              <input
+                value={name}
+                maxLength={LIMITS.maxNameLength}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </label>
+          </div>
           <button
             type="submit"
             className="button primary"

@@ -3,6 +3,10 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // Portraits load as separate files, so 180 drawings don't swell the main script.
+  build: {
+    assetsInlineLimit: (file) => (file.includes('/art/avatars/') ? false : undefined),
+  },
   plugins: [
     react(),
     VitePWA({

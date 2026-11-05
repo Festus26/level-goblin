@@ -2,6 +2,7 @@ import { canEditPlayer, strength, type Player } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
 import { Art } from './Art.tsx';
+import { PlayerAvatar } from './Avatar.tsx';
 import { Stepper } from './Stepper.tsx';
 
 export function PlayerCard({ game, player }: { game: GameHandle; player: Player }) {
@@ -15,6 +16,7 @@ export function PlayerCard({ game, player }: { game: GameHandle; player: Player 
   return (
     <li className="player-card" data-color={player.color} data-turn={hasTurn}>
       <div className="player-heading">
+        <PlayerAvatar state={state} player={player} size={56} />
         <span className="player-dot" aria-hidden="true" />
         <div className="player-title">
           <h3>{player.name}</h3>
