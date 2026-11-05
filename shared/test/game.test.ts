@@ -10,6 +10,7 @@ import {
   normalizeSessionCode,
   parseAction,
   secureDieRoll,
+  upgradeGame,
   strength,
   type Action,
   type ActionContext,
@@ -113,6 +114,86 @@ describe('players', () => {
     state = run(state, { type: 'updateCombat', helperId: 'cy' });
     state = run(state, { type: 'removePlayer', playerId: 'cy' });
     expect(state.combat?.helperId).toBeNull();
+  });
+});
+
+describe('leaving and coming back', () => {
+  const leave = (state: GameState, playerId: string) =>
+    run(state, { type: 'removePlayer', playerId });
+  const back = (playerId: string) => ({ type: 'returnPlayer', playerId }) as const;
+
+  it('keeps the stats of a player who leaves', () => {
+    let state = run(table(), { type: 'changeLevel', playerId: 'bo', delta: 3 });
+    state = run(state, { type: 'changeGear', playerId: 'bo', delta: 2 });
+    state = leave(state, 'bo');
+    expect(findPlayer(state, 'bo')).toBeUndefined();
+    expect(state.departed).toMatchObject([{ id: 'bo', level: 4, gear: 2 }]);
+  });
+
+  it('brings them back with those stats, and off the departed list', () => {
+    let state = run(table(), { type: 'changeLevel', playerId: 'bo', delta: 3 });
+    state = run(leave(state, 'bo'), back('bo'));
+    expect(findPlayer(state, 'bo')).toMatchObject({ level: 4, color: 'red' });
+    expect(state.departed).toEqual([]);
+    expect(lastLog(state)).toMatchObject({ type: 'join', playerName: 'Bo' });
+  });
+
+  it('picks a new color if theirs was taken while they were away', () => {
+    let state = leave(table(), 'bo');
+    state = run(state, { type: 'addPlayer', id: 'di', name: 'Di', color: 'red' });
+    state = run(state, back('bo'));
+    const colors = state.players.map((player) => player.color);
+    expect(new Set(colors).size).toBe(colors.length);
+  });
+
+  it('only lets the server or table device bring someone back', () => {
+    expect(errorOf(leave(table(), 'bo'), back('bo'), 'ada')).toBe('forbidden');
+  });
+
+  it('rejects a player who never left, and a full table', () => {
+    expect(errorOf(table(), back('bo'), null)).toBe('playerNotFound');
+    let state = leave(table(), 'bo');
+    for (let i = state.players.length; i < LIMITS.maxPlayers; i++) {
+      state = run(state, { type: 'addPlayer', id: `p${i}`, name: 'P', color: 'gold' });
+    }
+    expect(errorOf(state, back('bo'), null)).toBe('tableFull');
+  });
+
+  it('restores a win when the winner returns', () => {
+    let state = run(table('ownAndHost', 5), { type: 'changeLevel', playerId: 'bo', delta: 4 });
+    state = leave(state, 'bo');
+    expect(state.winnerId).toBeNull();
+    state = run(state, back('bo'));
+    expect(state.winnerId).toBe('bo');
+  });
+
+  it('gives a returning player the turn if nobody has it', () => {
+    let state = run(createGame(), { type: 'addPlayer', id: 'ada', name: 'Ada', color: 'gold' });
+    state = leave(state, 'ada');
+    expect(state.turnPlayerId).toBeNull();
+    expect(run(state, back('ada')).turnPlayerId).toBe('ada');
+  });
+
+  it('can undo older changes again after returning', () => {
+    let state = run(table(), { type: 'changeLevel', playerId: 'bo', delta: 2 });
+    const logId = lastLog(state)!.id;
+    state = run(leave(state, 'bo'), back('bo'));
+    expect(levelOf(run(state, { type: 'undo', logId }), 'bo')).toBe(1);
+  });
+
+  it('caps how many departed players are remembered', () => {
+    let state = createGame();
+    for (let i = 0; i < LIMITS.maxDeparted + 5; i++) {
+      state = run(state, { type: 'addPlayer', id: `p${i}`, name: 'P', color: 'gold' });
+      state = leave(state, `p${i}`);
+    }
+    expect(state.departed).toHaveLength(LIMITS.maxDeparted);
+  });
+
+  it('upgrades a game saved before leaving existed', () => {
+    const { departed: _departed, ...oldSave } = table();
+    const upgraded = upgradeGame(oldSave as GameState);
+    expect(leave(upgraded, 'bo').departed).toHaveLength(1);
   });
 });
 

@@ -10,10 +10,18 @@ interface OnlineTableProps {
   seat: SeatCredentials;
   showInvite: boolean;
   onLeave: () => void;
+  onLeft: () => void;
   onEnded: (reason: EndReason) => void;
 }
 
-export function OnlineTable({ code, seat, showInvite, onLeave, onEnded }: OnlineTableProps) {
+export function OnlineTable({
+  code,
+  seat,
+  showInvite,
+  onLeave,
+  onLeft,
+  onEnded,
+}: OnlineTableProps) {
   const { t } = useI18n();
   const game = useOnlineGame(code, seat, onEnded);
 
@@ -41,6 +49,7 @@ export function OnlineTable({ code, seat, showInvite, onLeave, onEnded }: Online
       game={game}
       showInvite={showInvite}
       onLeave={onLeave}
+      onLeft={onLeft}
       onEnd={() => game.online?.endSession()}
     />
   );

@@ -13,6 +13,8 @@ export interface OnlineControls {
   dismissRejected: () => void;
   freeSeat: (playerId: string) => void;
   claimHost: () => void;
+  /** Gives up this phone's seat. False if there's no connection to say so. */
+  leave: () => boolean;
   endSession: () => void;
 }
 

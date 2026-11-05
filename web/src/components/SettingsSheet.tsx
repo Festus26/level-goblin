@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LIMITS, cleanName, nextColor } from '@level-goblin/shared';
+import { LIMITS, cleanName, nextColor, strength } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
 import { EditRightsPicker } from './EditRightsPicker.tsx';
@@ -12,10 +12,17 @@ interface SettingsSheetProps {
   game: GameHandle;
   onClose: () => void;
   onLeave: () => void;
+  onLeft: () => void;
   onEnd: () => void;
 }
 
-export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetProps) {
+export function SettingsSheet({
+  game,
+  onClose,
+  onLeave,
+  onLeft,
+  onEnd,
+}: SettingsSheetProps) {
   const { t } = useI18n();
   const { state, me, dispatch, online } = game;
   const [newName, setNewName] = useState('');
@@ -96,9 +103,46 @@ export function SettingsSheet({ game, onClose, onLeave, onEnd }: SettingsSheetPr
         </form>
       )}
 
+      {!online && state.departed.length > 0 && (
+        <>
+          <h3>{t('settings.departed')}</h3>
+          <ul className="settings-players">
+            {state.departed.map((player) => (
+              <li key={player.id}>
+                <span>
+                  {player.name} ({strength(player)})
+                </span>
+                <button
+                  type="button"
+                  className="button small"
+                  aria-label={t('settings.returnPlayer', { name: player.name })}
+                  disabled={isFull}
+                  onClick={() => dispatch({ type: 'returnPlayer', playerId: player.id })}
+                >
+                  {t('settings.return')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       <button type="button" className="button" onClick={onLeave}>
         {t('settings.leave')}
       </button>
+      {online && (
+        <button
+          type="button"
+          className="button danger"
+          onClick={() => {
+            const isLast = state.players.length === 1;
+            const question = t(isLast ? 'settings.confirmEnd' : 'settings.confirmLeave');
+            if (window.confirm(question) && online.leave()) onLeft();
+          }}
+        >
+          {t('settings.leaveGame')}
+        </button>
+      )}
       {isHostPhone && (
         <button
           type="button"

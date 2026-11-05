@@ -106,6 +106,41 @@ test('manages players and ends the game', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Continue game' })).toHaveCount(0);
 });
 
+test('a player leaves and comes back with their stats on one phone', async ({ page }) => {
+  page.on('dialog', (dialog) => dialog.accept());
+  await startGame(page, ['Ada', 'Bo']);
+  await levelUp(page, 'Bo').click();
+  await gearUp(page, 'Bo').click();
+
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Remove Bo' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(card(page, 'Bo')).toHaveCount(0);
+
+  await page.reload();
+  await page.getByRole('button', { name: 'Continue game' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Bring Bo back' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(card(page, 'Bo').locator('.strength strong')).toHaveText('3');
+});
+
+test('a game saved before leaving existed still loads', async ({ page }) => {
+  page.on('dialog', (dialog) => dialog.accept());
+  await startGame(page, ['Ada', 'Bo']);
+  await page.evaluate(() => {
+    const key = 'level-goblin.local-game.v1';
+    const save = JSON.parse(localStorage.getItem(key)!);
+    delete save.departed;
+    localStorage.setItem(key, JSON.stringify(save));
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Continue game' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Remove Bo' }).click();
+  await expect(page.getByRole('button', { name: 'Bring Bo back' })).toBeVisible();
+});
+
 test('switches to Turkish and has no sideways scroll at phone width', async ({ page }) => {
   await startGame(page, ['Çağrı Yıldırımoğlu Uzun İsim', 'Bo']);
   await page.getByRole('button', { name: 'Settings' }).click();

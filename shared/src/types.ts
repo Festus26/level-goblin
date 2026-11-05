@@ -27,6 +27,7 @@ export const LIMITS = {
   maxWinLevel: 99,
   maxCombatValue: 999,
   maxLogEntries: 100,
+  maxDeparted: 20,
 } as const;
 
 export const DEFAULT_WIN_LEVEL = 10;
@@ -99,6 +100,8 @@ export interface GameState {
   winLevel: number;
   winnerId: string | null;
   players: Player[];
+  /** Players who left, kept so they can come back with their stats. */
+  departed: Player[];
   turnPlayerId: string | null;
   combat: Combat | null;
   lastRoll: DieRoll | null;
@@ -109,6 +112,7 @@ export interface GameState {
 export type Action =
   | { type: 'addPlayer'; id: string; name: string; color: PlayerColor }
   | { type: 'removePlayer'; playerId: string }
+  | { type: 'returnPlayer'; playerId: string }
   | { type: 'updatePlayer'; playerId: string; name?: string; color?: PlayerColor }
   | { type: 'changeLevel'; playerId: string; delta: number }
   | { type: 'changeGear'; playerId: string; delta: number }

@@ -44,6 +44,7 @@ export type ClientMessage =
   | { t: 'action'; action: Action }
   | { t: 'freeSeat'; playerId: string }
   | { t: 'claimHost' }
+  | { t: 'leave' }
   | { t: 'endSession' };
 
 /** Why this phone can't stay connected. Reconnecting won't help in either case. */

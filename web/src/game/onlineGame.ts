@@ -156,6 +156,11 @@ export function useOnlineGame(
         dismissRejected: () => setRejected(null),
         freeSeat: (playerId) => send({ t: 'freeSeat', playerId }),
         claimHost: () => send({ t: 'claimHost' }),
+        leave: () => {
+          const sent = send({ t: 'leave' });
+          if (!sent) setRejected('invalidAction');
+          return sent;
+        },
         endSession: () => send({ t: 'endSession' }),
       },
     };

@@ -50,6 +50,11 @@ export function parseAction(input: unknown): Action | null {
         ? { type: 'removePlayer', playerId: input.playerId }
         : null;
 
+    case 'returnPlayer':
+      return isId(input.playerId)
+        ? { type: 'returnPlayer', playerId: input.playerId }
+        : null;
+
     case 'updatePlayer': {
       if (!isId(input.playerId)) return null;
       const action: Extract<Action, { type: 'updatePlayer' }> = {

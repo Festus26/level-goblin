@@ -106,5 +106,10 @@
   "errors.seatLost": "You no longer have a seat in that session.",
   "errors.sessionEnded": "That session has ended.",
   "errors.forbidden": "You are not allowed to do that.",
-  "errors.rejected": "That did not work."
+  "errors.rejected": "That did not work.",
+  "settings.leaveGame": "Leave game",
+  "settings.confirmLeave": "Leave this game? You can come back with the session code and keep your stats.",
+  "settings.departed": "Left the game",
+  "settings.return": "Bring back",
+  "settings.returnPlayer": "Bring {name} back"
 }

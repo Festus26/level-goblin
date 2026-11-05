@@ -86,6 +86,10 @@ export function App() {
           seat={seat}
           showInvite={screen.showInvite}
           onLeave={() => goHome()}
+          onLeft={() => {
+            forgetSeat(screen.code);
+            goHome();
+          }}
           onEnded={(reason) => {
             forgetSeat(screen.code);
             goHome(END_NOTICES[reason]);

@@ -226,6 +226,50 @@ test('removing a player sends them home with a reason', async ({ browser }) => {
   await expect(bo.page.getByRole('alert')).toHaveText('You no longer have a seat in that session.');
 });
 
+test('a player leaves, then returns with their stats', async ({ browser }) => {
+  const [ada, bo] = [await phone(browser), await phone(browser)];
+  bo.page.on('dialog', (dialog) => dialog.accept());
+  const code = await createSession(ada.page, 'Ada');
+  await joinByLink(bo.page, code, 'Bo');
+  await levelUp(bo.page, 'Bo').click();
+  await expect(strengthOf(ada.page, 'Bo')).toHaveText('2');
+
+  await openSettings(bo.page);
+  await bo.page.getByRole('button', { name: 'Leave game' }).click();
+  await expect(bo.page.getByRole('button', { name: 'Create a session' })).toBeVisible();
+  await expect(bo.page.getByRole('alert')).toHaveCount(0);
+  await expect(card(ada.page, 'Bo')).toHaveCount(0);
+
+  await bo.page.goto(`/?join=${code}`);
+  await bo.page.getByRole('button', { name: 'Bo', exact: true }).click();
+  await expect(strengthOf(bo.page, 'Bo')).toHaveText('2');
+  await expect(strengthOf(ada.page, 'Bo')).toHaveText('2');
+});
+
+test('someone new joins a game already in progress', async ({ browser }) => {
+  const [ada, bo] = [await phone(browser), await phone(browser)];
+  const code = await createSession(ada.page, 'Ada');
+  await levelUp(ada.page, 'Ada').click();
+  await ada.page.getByRole('button', { name: 'Roll' }).click();
+  await joinByLink(bo.page, code, 'Bo');
+  await expect(strengthOf(bo.page, 'Ada')).toHaveText('2');
+  await expect(bo.page.getByRole('button', { name: /^Rolled [1-6]$/ })).toBeVisible();
+  await expect(strengthOf(ada.page, 'Bo')).toHaveText('1');
+});
+
+test('when the host leaves, another player gets the host controls', async ({ browser }) => {
+  const [ada, bo] = [await phone(browser), await phone(browser)];
+  ada.page.on('dialog', (dialog) => dialog.accept());
+  const code = await createSession(ada.page, 'Ada');
+  await joinByLink(bo.page, code, 'Bo');
+
+  await openSettings(ada.page);
+  await ada.page.getByRole('button', { name: 'Leave game' }).click();
+  await expect(card(bo.page, 'Ada')).toHaveCount(0);
+  await openSettings(bo.page);
+  await expect(bo.page.getByRole('button', { name: 'End game' })).toBeVisible();
+});
+
 test('ending the session sends everyone home', async ({ browser }) => {
   const [ada, bo] = [await phone(browser), await phone(browser)];
   ada.page.on('dialog', (dialog) => dialog.accept());

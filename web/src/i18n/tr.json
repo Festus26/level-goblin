@@ -106,5 +106,10 @@
   "errors.seatLost": "Bu oturumda artık yerin yok.",
   "errors.sessionEnded": "Bu oturum sona erdi.",
   "errors.forbidden": "Bunu yapma iznin yok.",
-  "errors.rejected": "Bu işlem yapılamadı."
+  "errors.rejected": "Bu işlem yapılamadı.",
+  "settings.leaveGame": "Oyundan ayrıl",
+  "settings.confirmLeave": "Oyundan ayrılmak istiyor musun? Oturum koduyla dönebilir ve değerlerini koruyabilirsin.",
+  "settings.departed": "Oyundan ayrılanlar",
+  "settings.return": "Geri getir",
+  "settings.returnPlayer": "Geri getir: {name}"
 }

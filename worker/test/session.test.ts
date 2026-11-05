@@ -341,6 +341,106 @@ describe('losing and recovering seats', () => {
   });
 });
 
+describe('leaving and joining mid-game', () => {
+  it('lets someone join an ongoing game without disturbing it', async () => {
+    const { host, bo, ada, boClient } = await table();
+    boClient.act({ type: 'changeLevel', playerId: bo.playerId, delta: 3 });
+    await ada.stateWhere((state) => state.players.some((p) => p.level === 4), 'the change');
+
+    const cy = await seat(host.code, 'Cy');
+    const { state } = await ada.stateWhere((game) => game.players.length === 3, 'Cy seated');
+    expect(state.players.find((player) => player.id === bo.playerId)?.level).toBe(4);
+    expect(state.players.find((player) => player.id === cy.playerId)?.level).toBe(1);
+  });
+
+  it('takes a leaver off the table, and they return with their stats', async () => {
+    const { host, bo, ada, boClient } = await table();
+    boClient.act({ type: 'changeLevel', playerId: bo.playerId, delta: 3 });
+    await ada.stateWhere((state) => state.players.some((p) => p.level === 4), 'the change');
+
+    boClient.send({ t: 'leave' });
+    expect(await boClient.ended()).toBe('seatLost');
+    await ada.stateWhere((state) => state.players.length === 1, 'Bo to leave');
+
+    const info = await fetch(`${base(MAIN_PORT)}/sessions/${host.code}`, { headers });
+    expect(((await info.json()) as SessionInfo).openSeats).toEqual([
+      { id: bo.playerId, name: 'Bo' },
+    ]);
+
+    const returned = await join(host.code, { seatId: bo.playerId });
+    expect(returned.status).toBe(201);
+    const seatBack = (await returned.json()) as SeatCredentials;
+    expect(seatBack.playerId).toBe(bo.playerId);
+    const client = new Client(host.code, seatBack.token);
+    const { state } = await client.until(() => client.state(), 'Bo to reconnect');
+    expect(state.players.find((player) => player.id === bo.playerId)?.level).toBe(4);
+  });
+
+  it('locks out the old token after leaving', async () => {
+    const { host, bo, boClient } = await table();
+    boClient.send({ t: 'leave' });
+    await boClient.ended();
+    const again = new Client(host.code, bo.token);
+    expect(await again.ended()).toBe('seatLost');
+  });
+
+  it('cannot take back a seat twice', async () => {
+    const { host, bo, boClient } = await table();
+    boClient.send({ t: 'leave' });
+    await boClient.ended();
+    expect((await join(host.code, { seatId: bo.playerId })).status).toBe(201);
+    expect((await join(host.code, { seatId: bo.playerId })).status).toBe(409);
+  });
+
+  it('passes host to an online player when the host leaves', async () => {
+    const { host, ada, boClient } = await table();
+    const cy = await seat(host.code, 'Cy');
+    const dee = await seat(host.code, 'Dee');
+    const deeClient = new Client(host.code, dee.token);
+    await deeClient.until(() => deeClient.state(), 'Dee to connect');
+    boClient.close();
+    await ada.until(() => ada.state()?.online.length === 2, 'Bo to go offline');
+
+    ada.send({ t: 'leave' });
+    await deeClient.stateWhere((state) => state.hostId === dee.playerId, 'Dee to become host');
+    expect(cy.playerId).not.toBe(dee.playerId);
+  });
+
+  it('ends the session when the last player leaves', async () => {
+    const host = await createSession();
+    const ada = new Client(host.code, host.token);
+    await ada.until(() => ada.state(), 'first state');
+    ada.send({ t: 'leave' });
+    expect(await ada.ended()).toBe('sessionEnded');
+    const info = await fetch(`${base(MAIN_PORT)}/sessions/${host.code}`, { headers });
+    expect(info.status).toBe(404);
+  });
+
+  it('ends a fight when the fighter leaves', async () => {
+    const { bo, ada, boClient } = await table();
+    boClient.act({ type: 'startCombat', fighterId: bo.playerId, monsterLevel: 3 });
+    await ada.stateWhere((state) => state.combat !== null, 'the fight');
+    boClient.send({ t: 'leave' });
+    await ada.stateWhere((state) => state.combat === null, 'the fight to end');
+  });
+
+  it('hides a departed seat while the table is full', async () => {
+    const host = await createSession();
+    const bo = await seat(host.code, 'Bo');
+    const client = new Client(host.code, bo.token);
+    await client.until(() => client.state(), 'Bo to connect');
+    client.send({ t: 'leave' });
+    await client.ended();
+    for (let i = 0; i < 9; i++) await seat(host.code, `P${i}`);
+
+    const info = await fetch(`${base(MAIN_PORT)}/sessions/${host.code}`, { headers });
+    expect(await info.json()).toEqual({ isFull: true, openSeats: [] });
+    const response = await join(host.code, { seatId: bo.playerId });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'tableFull' });
+  });
+});
+
 describe('ending sessions', () => {
   it('lets only the host end the session, and then it is gone', async () => {
     const { host, ada, boClient } = await table();

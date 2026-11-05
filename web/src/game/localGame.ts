@@ -4,6 +4,7 @@ import {
   createGame,
   nextColor,
   secureDieRoll,
+  upgradeGame,
   type Action,
   type ActionContext,
   type GameState,
@@ -17,7 +18,9 @@ function load(): GameState | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const state = JSON.parse(raw) as GameState;
-    return Array.isArray(state.players) && Array.isArray(state.log) ? state : null;
+    return Array.isArray(state.players) && Array.isArray(state.log)
+      ? upgradeGame(state)
+      : null;
   } catch {
     return null;
   }

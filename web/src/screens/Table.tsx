@@ -20,10 +20,11 @@ interface TableProps {
   game: GameHandle;
   showInvite?: boolean;
   onLeave: () => void;
+  onLeft?: () => void;
   onEnd: () => void;
 }
 
-export function Table({ game, showInvite = false, onLeave, onEnd }: TableProps) {
+export function Table({ game, showInvite = false, onLeave, onLeft, onEnd }: TableProps) {
   useWakeLock();
   const { t } = useI18n();
   const { state, me, dispatch, online } = game;
@@ -118,7 +119,16 @@ export function Table({ game, showInvite = false, onLeave, onEnd }: TableProps) 
       {sheet === 'fight' && <FightSheet game={game} onClose={closeSheet} />}
       {sheet === 'log' && <LogSheet game={game} onClose={closeSheet} />}
       {sheet === 'settings' && (
-        <SettingsSheet game={game} onClose={closeSheet} onLeave={onLeave} onEnd={onEnd} />
+        <SettingsSheet
+          game={game}
+          onClose={closeSheet}
+          onLeave={onLeave}
+          onLeft={() => {
+            closeSheet();
+            onLeft?.();
+          }}
+          onEnd={onEnd}
+        />
       )}
       {sheet === 'invite' && online && (
         <InviteSheet code={online.code} onClose={closeSheet} />

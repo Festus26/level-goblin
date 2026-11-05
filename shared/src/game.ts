@@ -28,12 +28,19 @@ export function createGame(options: NewGameOptions = {}): GameState {
     winLevel: options.winLevel ?? DEFAULT_WIN_LEVEL,
     winnerId: null,
     players: [],
+    departed: [],
     turnPlayerId: null,
     combat: null,
     lastRoll: null,
     log: [],
   };
 }
+
+/** Fills in fields added since a game was saved, so old saves keep working. */
+export const upgradeGame = (state: GameState): GameState => ({
+  ...state,
+  departed: state.departed ?? [],
+});
 
 export const strength = (player: Player): number => player.level + player.gear;
 
@@ -215,6 +222,7 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
       const next: GameState = {
         ...state,
         players: remaining,
+        departed: [...state.departed, player].slice(-LIMITS.maxDeparted),
         turnPlayerId: turnPlayerId === player.id ? null : turnPlayerId,
         combat,
         winnerId: state.winnerId === player.id ? null : state.winnerId,
@@ -222,6 +230,28 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
       return {
         ok: true,
         state: refreshWinner(addLog(next, ctx, 'leave', { player }), ctx, null),
+      };
+    }
+
+    case 'returnPlayer': {
+      // Online, players come back through the server, which gives them a new seat.
+      if (actorId !== null) return fail('forbidden');
+      const player = state.departed.find((item) => item.id === action.playerId);
+      if (!player) return fail('playerNotFound');
+      if (state.players.length >= LIMITS.maxPlayers) return fail('tableFull');
+      const colorIsTaken = state.players.some((other) => other.color === player.color);
+      const returned: Player = colorIsTaken
+        ? { ...player, color: nextColor(state) }
+        : player;
+      const next: GameState = {
+        ...state,
+        players: [...state.players, returned],
+        departed: state.departed.filter((item) => item.id !== player.id),
+        turnPlayerId: state.turnPlayerId ?? player.id,
+      };
+      return {
+        ok: true,
+        state: refreshWinner(addLog(next, ctx, 'join', { player: returned }), ctx, player.id),
       };
     }
 

@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
+  LIMITS,
   PING,
   PONG,
   applyAction,
@@ -9,6 +10,7 @@ import {
   nextColor,
   parseAction,
   secureDieRoll,
+  upgradeGame,
   type Action,
   type ActionContext,
   type ActionError,
@@ -53,7 +55,8 @@ export class SessionRoom extends DurableObject<Env> {
     super(ctx, env);
     // This also runs on each wake from hibernation, so memory is always restored.
     ctx.blockConcurrencyWhile(async () => {
-      this.session = (await ctx.storage.get<StoredSession>(STORAGE_KEY)) ?? null;
+      const stored = await ctx.storage.get<StoredSession>(STORAGE_KEY);
+      this.session = stored ? { ...stored, game: upgradeGame(stored.game) } : null;
     });
     // Keeps connections alive without waking the object, so idle games cost nothing.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(PING, PONG));
@@ -133,13 +136,12 @@ export class SessionRoom extends DurableObject<Env> {
   info(): SessionInfo | null {
     const { session } = this;
     if (!session) return null;
-    const openSeats = session.game.players
-      .filter((player) => session.seats[player.id]?.open)
-      .map(({ id, name }) => ({ id, name }));
-    return {
-      isFull: session.game.players.length >= 10 && openSeats.length === 0,
-      openSeats,
-    };
+    const isFull = session.game.players.length >= LIMITS.maxPlayers;
+    const freedSeats = session.game.players.filter((player) => session.seats[player.id]?.open);
+    // Someone who left needs a free chair to come back to. A freed seat is already one.
+    const returning = isFull ? [] : session.game.departed;
+    const openSeats = [...freedSeats, ...returning].map(({ id, name }) => ({ id, name }));
+    return { isFull: isFull && openSeats.length === 0, openSeats };
   }
 
   async join(request: JoinRequest): Promise<JoinResult> {
@@ -148,12 +150,22 @@ export class SessionRoom extends DurableObject<Env> {
     const token = crypto.randomUUID();
 
     if ('seatId' in request) {
-      const seat = session.seats[request.seatId];
-      if (!seat?.open) return { error: 'seatTaken' };
-      session.seats[request.seatId] = { token, open: false };
+      const { seatId } = request;
+      if (!session.seats[seatId]?.open) {
+        const returned = applyAction(
+          session.game,
+          { type: 'returnPlayer', playerId: seatId },
+          this.context(null),
+        );
+        if (!returned.ok) {
+          return { error: returned.error === 'tableFull' ? 'tableFull' : 'seatTaken' };
+        }
+        session.game = returned.state;
+      }
+      session.seats[seatId] = { token, open: false };
       await this.save(session);
       this.broadcast();
-      return { playerId: request.seatId, token };
+      return { playerId: seatId, token };
     }
 
     const name = cleanName(request.name);
@@ -239,6 +251,8 @@ export class SessionRoom extends DurableObject<Env> {
         return this.freeSeat(ws, session, playerId, message.playerId);
       case 'claimHost':
         return this.claimHost(ws, session, playerId);
+      case 'leave':
+        return this.leave(session, playerId);
       case 'endSession':
         return this.endSession(ws, session, playerId);
       default:
@@ -296,10 +310,7 @@ export class SessionRoom extends DurableObject<Env> {
     if (hostId === null || !findPlayer(session.game, playerId)) {
       return this.reject(ws, 'forbidden');
     }
-    const hostIsOnline = this.socketsOf(hostId).some(
-      (socket) => socket.readyState === WebSocket.OPEN,
-    );
-    if (hostIsOnline) return this.reject(ws, 'forbidden');
+    if (this.isOnline(hostId)) return this.reject(ws, 'forbidden');
 
     const result = applyAction(
       session.game,
@@ -308,6 +319,35 @@ export class SessionRoom extends DurableObject<Env> {
     );
     if (!result.ok) return this.reject(ws, result.error);
     session.game = result.state;
+    await this.save(session);
+    this.broadcast();
+  }
+
+  private isOnline(playerId: string): boolean {
+    return this.socketsOf(playerId).some((socket) => socket.readyState === WebSocket.OPEN);
+  }
+
+  /** Takes the player off the table. Their stats stay in `departed` for when they return. */
+  private async leave(session: StoredSession, playerId: string): Promise<void> {
+    const others = session.game.players.filter((player) => player.id !== playerId);
+    if (others.length === 0) return this.destroy();
+
+    let { game } = session;
+    if (playerId === game.hostId) {
+      const successor = others.find((player) => this.isOnline(player.id)) ?? others[0]!;
+      const handedOver = applyAction(
+        game,
+        { type: 'transferHost', playerId: successor.id },
+        this.context(playerId),
+      );
+      if (handedOver.ok) game = handedOver.state;
+    }
+    const left = applyAction(game, { type: 'removePlayer', playerId }, this.context(null));
+    if (!left.ok) return;
+
+    session.game = left.state;
+    delete session.seats[playerId];
+    for (const socket of this.socketsOf(playerId)) this.sendOff(socket, 'seatLost');
     await this.save(session);
     this.broadcast();
   }
