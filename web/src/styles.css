@@ -165,7 +165,7 @@ input, select {
 }
 .session-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .session-bar .button { align-self: center; }
-.connection, .notice {
+.connection, .notice, .alert {
   width: 100%;
   padding: 8px 12px;
   border: var(--line) solid var(--danger);

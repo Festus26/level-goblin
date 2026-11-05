@@ -46,34 +46,41 @@ export function CreateSession({ onBack, onCreated }: CreateSessionProps) {
         {t('back')}
       </button>
       <h1>{t('create.title')}</h1>
-      <label className="field">
-        <span>{t('join.yourName')}</span>
-        <input
-          value={name}
-          maxLength={LIMITS.maxNameLength}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </label>
-      <EditRightsPicker value={editRights} onChange={setEditRights} />
-      <Stepper
-        label={t('setup.winLevel')}
-        art="levelBadge"
-        value={winLevel}
-        onChange={(delta) =>
-          setWinLevel((value) =>
-            Math.min(LIMITS.maxWinLevel, Math.max(LIMITS.minWinLevel, value + delta)),
-          )
-        }
-      />
-      <button
-        type="button"
-        className="button primary"
-        disabled={cleaned === null || busy}
-        onClick={submit}
+      <form
+        className="stack"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit();
+        }}
       >
-        {t('create.submit')}
-      </button>
-      {failed && <p role="alert">{t('errors.network')}</p>}
+        <label className="field">
+          <span>{t('join.yourName')}</span>
+          <input
+            value={name}
+            maxLength={LIMITS.maxNameLength}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
+        <EditRightsPicker value={editRights} onChange={setEditRights} />
+        <Stepper
+          label={t('setup.winLevel')}
+          art="levelBadge"
+          value={winLevel}
+          onChange={(delta) =>
+            setWinLevel((value) =>
+              Math.min(LIMITS.maxWinLevel, Math.max(LIMITS.minWinLevel, value + delta)),
+            )
+          }
+        />
+        {failed && (
+          <p className="alert" role="alert">
+            {t('errors.network')}
+          </p>
+        )}
+        <button type="submit" className="button primary" disabled={cleaned === null || busy}>
+          {busy ? t('online.connecting') : t('create.submit')}
+        </button>
+      </form>
     </main>
   );
 }

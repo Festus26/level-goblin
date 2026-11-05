@@ -59,6 +59,12 @@ export function JoinSession({ code, onBack, onJoined }: JoinSessionProps) {
       </button>
       <h1>{t('join.title', { code })}</h1>
 
+      {error && (
+        <p className="alert" role="alert">
+          {t(ERROR_KEYS[error])}
+        </p>
+      )}
+
       {info && info.openSeats.length > 0 && (
         <>
           <h3>{t('join.takeSeat')}</h3>
@@ -97,13 +103,12 @@ export function JoinSession({ code, onBack, onJoined }: JoinSessionProps) {
             className="button primary"
             disabled={cleaned === null || busy}
           >
-            {t('join.submit')}
+            {busy ? t('online.connecting') : t('join.submit')}
           </button>
         </form>
       )}
 
       {info?.isFull && <p>{t('setup.tableFull')}</p>}
-      {error && <p role="alert">{t(ERROR_KEYS[error])}</p>}
     </main>
   );
 }

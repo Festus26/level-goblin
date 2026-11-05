@@ -37,7 +37,11 @@ export function Home({
       </div>
       <h1>{SITE_NAME}</h1>
       <p>{t('tagline')}</p>
-      {notice && <p role="alert">{t(notice)}</p>}
+      {notice && (
+        <p className="alert" role="alert">
+          {t(notice)}
+        </p>
+      )}
 
       {onlineCode && (
         <button

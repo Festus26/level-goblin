@@ -258,6 +258,32 @@ test('one-phone mode works with the server down', async ({ browser }) => {
   await expect(strengthOf(page, 'Ada')).toHaveText('2');
 });
 
+test('pressing Enter creates the session', async ({ browser }) => {
+  const { page } = await phone(browser);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create a session' }).click();
+  await page.getByLabel('Your name').fill('Ada');
+  await page.getByLabel('Your name').press('Enter');
+  await expect(page.locator('.session-code')).toBeVisible();
+});
+
+test('a stalled server ends in an error, not a dead button', async ({ browser }) => {
+  test.setTimeout(30_000);
+  const { context, page } = await phone(browser);
+  await context.route(`${API}/**`, () => {
+    // Never answers, like a connection that hangs.
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create a session' }).click();
+  await page.getByLabel('Your name').fill('Ada');
+  await page.getByRole('button', { name: 'Create session' }).click();
+  await expect(page.getByRole('button', { name: 'Connecting…' })).toBeDisabled();
+  await expect(page.getByRole('alert')).toContainText('Could not reach the server', {
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Create session' })).toBeEnabled();
+});
+
 test('creating a session explains when the server is down', async ({ browser }) => {
   const { context, page } = await phone(browser);
   await context.route(`${API}/**`, (route) => route.abort());

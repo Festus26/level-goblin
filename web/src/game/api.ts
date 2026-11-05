@@ -11,9 +11,15 @@ export type ApiError = 'notFound' | 'tableFull' | 'seatTaken' | 'network' | 'unk
 
 export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiError };
 
+/** A stalled request must end in an error, or the screen would just sit there. */
+const TIMEOUT_MS = 10_000;
+
 async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
   try {
-    const response = await fetch(`${API_URL}${path}`, init);
+    const response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     const body = (await response.json()) as T & { error?: string };
     if (response.ok) return { ok: true, value: body };
     const known: ApiError[] = ['notFound', 'tableFull', 'seatTaken'];
