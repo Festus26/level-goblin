@@ -163,3 +163,61 @@ test('keeps Munchkin out of the page', async ({ page }) => {
   await page.goto('/');
   expect((await page.content()).toLowerCase()).not.toContain('munchkin');
 });
+
+test('keeps the screen awake at the table, not on the home screen', async ({ page }) => {
+  await page.addInitScript(() => {
+    const calls: string[] = [];
+    Object.assign(window, { wakeLockCalls: calls });
+    Object.defineProperty(navigator, 'wakeLock', {
+      value: {
+        request: async (type: string) => {
+          calls.push(type);
+          return { addEventListener() {}, release: async () => {} };
+        },
+      },
+    });
+  });
+  const calls = () => page.evaluate(() => (window as never as { wakeLockCalls: string[] }).wakeLockCalls);
+  await page.goto('/');
+  expect(await calls()).toEqual([]);
+  await startGame(page, ['Ada']);
+  await expect.poll(calls).toContain('screen');
+});
+
+test('still works when wake lock is refused', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'wakeLock', {
+      value: { request: async () => Promise.reject(new Error('refused')) },
+    });
+  });
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await startGame(page, ['Ada']);
+  await levelUp(page, 'Ada').click();
+  await expect(card(page, 'Ada').locator('.strength strong')).toHaveText('2');
+  expect(errors).toEqual([]);
+});
+
+test('is installable and loads with no network after the first visit', async ({ page, context }) => {
+  await page.goto('/');
+  const manifest = await page.evaluate(async () => {
+    const href = document.querySelector<HTMLLinkElement>('link[rel=manifest]')!.href;
+    return (await fetch(href)).json();
+  });
+  expect(manifest.display).toBe('standalone');
+  expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toContain('512x512');
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+    .toBe(true);
+
+  await context.setOffline(true);
+  await page.reload();
+  await page.getByRole('button', { name: 'One-phone game' }).click();
+  await page.getByLabel('Player name').fill('Ada');
+  await page.getByRole('button', { name: 'Start game' }).click();
+  await levelUp(page, 'Ada').click();
+  await expect(card(page, 'Ada').locator('.strength strong')).toHaveText('2');
+});

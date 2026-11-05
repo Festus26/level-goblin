@@ -8,6 +8,7 @@ import { PlayerCard } from '../components/PlayerCard.tsx';
 import { SettingsSheet } from '../components/SettingsSheet.tsx';
 import { WinSheet } from '../components/WinSheet.tsx';
 import type { GameHandle } from '../game/handle.ts';
+import { useWakeLock } from '../game/useWakeLock.ts';
 import { useI18n, type MessageKey } from '../i18n/i18n.tsx';
 
 type OpenSheet = 'fight' | 'log' | 'settings' | 'invite' | null;
@@ -23,6 +24,7 @@ interface TableProps {
 }
 
 export function Table({ game, showInvite = false, onLeave, onEnd }: TableProps) {
+  useWakeLock();
   const { t } = useI18n();
   const { state, me, dispatch, online } = game;
   const [sheet, setSheet] = useState<OpenSheet>(showInvite ? 'invite' : null);
