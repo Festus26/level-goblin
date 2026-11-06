@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { combatResult, findPlayer } from '@level-goblin/shared';
+import { LIMITS, combatResult, findPlayer } from '@level-goblin/shared';
 import type { GameHandle } from '../game/handle.ts';
 import { useI18n } from '../i18n/i18n.tsx';
 import { Art } from './Art.tsx';
 import { PlayerAvatar } from './Avatar.tsx';
 import { PlayerChoice } from './PlayerChoice.tsx';
+import { RollButton } from './RollButton.tsx';
 import { Sheet } from './Sheet.tsx';
 import { Stepper } from './Stepper.tsx';
 
@@ -45,6 +46,7 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
         >
           {t('fight.start')}
         </button>
+        <RollButton game={game} />
       </Sheet>
     );
   }
@@ -52,28 +54,36 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
   const result = combatResult(state);
   const fighter = findPlayer(state, combat.fighterId);
   const helper = findPlayer(state, combat.helperId);
+  const { monsters } = combat;
+  const severalMonsters = monsters.length > 1;
+  const monstersWinLabel = severalMonsters ? t('fight.monstersWin') : t('fight.monsterWins');
 
   return (
     <Sheet title={t('fight.title')} onClose={onClose}>
       <div className="fight-score" data-players-win={result?.playersWin}>
         <div>
           <span className="fight-side">
-            {fighter && <PlayerAvatar state={state} player={fighter} size={44} />}
-            {helper && <PlayerAvatar state={state} player={helper} size={44} />}
+            {fighter && <PlayerAvatar state={state} player={fighter} size={36} />}
+            {helper && <PlayerAvatar state={state} player={helper} size={36} />}
           </span>
           <span>{t('fight.players')}</span>
           <strong>{result?.playerTotal}</strong>
         </div>
         <div>
-          <Art name="monster" size={40} />
-          <span>{t('fight.monster')}</span>
+          <Art name="monster" size={36} />
+          <span>
+            {severalMonsters
+              ? t('fight.monsters', { count: monsters.length })
+              : t('fight.monster')}
+          </span>
           <strong>{result?.monsterTotal}</strong>
         </div>
         <p role="status">
-          <Art name={result?.playersWin ? 'goblinGreedy' : 'goblinGulp'} size={44} />
-          {result?.playersWin ? t('fight.playersWin') : t('fight.monsterWins')}
+          <Art name={result?.playersWin ? 'goblinGreedy' : 'goblinGulp'} size={28} />
+          {result?.playersWin ? t('fight.playersWin') : monstersWinLabel}
         </p>
       </div>
+      <RollButton game={game} primary />
       <p className="fight-fighter">
         {fighter && <PlayerAvatar state={state} player={fighter} size={40} />}
         <span>
@@ -89,17 +99,6 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
         onChange={(helperId) => dispatch({ type: 'updateCombat', helperId })}
       />
       <Stepper
-        label={t('fight.monsterLevel')}
-        art="monster"
-        value={combat.monsterLevel}
-        onChange={(delta) =>
-          dispatch({
-            type: 'updateCombat',
-            monsterLevel: Math.max(1, combat.monsterLevel + delta),
-          })
-        }
-      />
-      <Stepper
         label={t('fight.playerBonus')}
         value={combat.playerBonus}
         signed
@@ -107,14 +106,69 @@ export function FightSheet({ game, onClose }: FightSheetProps) {
           dispatch({ type: 'updateCombat', playerBonus: combat.playerBonus + delta })
         }
       />
-      <Stepper
-        label={t('fight.monsterBonus')}
-        value={combat.monsterBonus}
-        signed
-        onChange={(delta) =>
-          dispatch({ type: 'updateCombat', monsterBonus: combat.monsterBonus + delta })
-        }
-      />
+      <ul className="fight-monsters">
+        {monsters.map((monster, index) => {
+          const name = t('fight.monsterName', { number: index + 1 });
+          const level = t('fight.level');
+          const bonus = t('fight.bonus');
+          return (
+            <li key={monster.id} className="fight-monster">
+              <header>
+                <Art name="monster" size={28} />
+                <h3>{name}</h3>
+                {severalMonsters && (
+                  <button
+                    type="button"
+                    className="button small"
+                    aria-label={t('fight.removeMonster', { name })}
+                    onClick={() => dispatch({ type: 'removeMonster', monsterId: monster.id })}
+                  >
+                    ✕
+                  </button>
+                )}
+              </header>
+              <Stepper
+                label={level}
+                value={monster.level}
+                increaseLabel={t('player.increase', { stat: level, name })}
+                decreaseLabel={t('player.decrease', { stat: level, name })}
+                onChange={(delta) =>
+                  dispatch({
+                    type: 'changeMonster',
+                    monsterId: monster.id,
+                    stat: 'level',
+                    delta,
+                  })
+                }
+              />
+              <Stepper
+                label={bonus}
+                value={monster.bonus}
+                signed
+                increaseLabel={t('player.increase', { stat: bonus, name })}
+                decreaseLabel={t('player.decrease', { stat: bonus, name })}
+                onChange={(delta) =>
+                  dispatch({
+                    type: 'changeMonster',
+                    monsterId: monster.id,
+                    stat: 'bonus',
+                    delta,
+                  })
+                }
+              />
+            </li>
+          );
+        })}
+      </ul>
+      <button
+        type="button"
+        className="button"
+        disabled={monsters.length >= LIMITS.maxMonsters}
+        onClick={() => dispatch({ type: 'addMonster' })}
+      >
+        <Art name="monster" />
+        {t('fight.addMonster')}
+      </button>
       <button
         type="button"
         className="button"

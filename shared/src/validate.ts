@@ -18,6 +18,9 @@ const isDelta = (value: unknown): value is number =>
 const isCombatValue = (value: unknown): value is number =>
   isIntIn(value, -LIMITS.maxCombatValue, LIMITS.maxCombatValue);
 
+const isMonsterId = (value: unknown): value is number =>
+  isIntIn(value, 1, Number.MAX_SAFE_INTEGER);
+
 const isColor = (value: unknown): value is PlayerColor =>
   PLAYER_COLORS.includes(value as PlayerColor);
 
@@ -119,14 +122,32 @@ export function parseAction(input: unknown): Action | null {
         if (input.helperId !== null && !isId(input.helperId)) return null;
         action.helperId = input.helperId;
       }
-      for (const key of ['monsterLevel', 'playerBonus', 'monsterBonus'] as const) {
-        const value = input[key];
-        if (value === undefined) continue;
-        if (!isCombatValue(value)) return null;
-        action[key] = value;
+      if (input.playerBonus !== undefined) {
+        if (!isCombatValue(input.playerBonus)) return null;
+        action.playerBonus = input.playerBonus;
       }
       return action;
     }
+
+    case 'addMonster':
+      return { type: 'addMonster' };
+
+    case 'removeMonster':
+      return isMonsterId(input.monsterId)
+        ? { type: 'removeMonster', monsterId: input.monsterId }
+        : null;
+
+    case 'changeMonster':
+      return isMonsterId(input.monsterId) &&
+        (input.stat === 'level' || input.stat === 'bonus') &&
+        isDelta(input.delta)
+        ? {
+            type: 'changeMonster',
+            monsterId: input.monsterId,
+            stat: input.stat,
+            delta: input.delta,
+          }
+        : null;
 
     case 'setEditRights':
       return isEditRights(input.editRights)

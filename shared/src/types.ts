@@ -26,6 +26,7 @@ export const LIMITS = {
   minWinLevel: 2,
   maxWinLevel: 99,
   maxCombatValue: 999,
+  maxMonsters: 10,
   maxLogEntries: 100,
   maxDeparted: 20,
 } as const;
@@ -41,13 +42,21 @@ export interface Player {
   gear: number;
 }
 
+export interface Monster {
+  id: number;
+  level: number;
+  /** One-shot bonus for this monster. Can be negative. */
+  bonus: number;
+}
+
 export interface Combat {
   fighterId: string;
   helperId: string | null;
-  monsterLevel: number;
-  /** One-shot bonuses. Either can be negative. */
+  /** One-shot bonus for the players. Can be negative. */
   playerBonus: number;
-  monsterBonus: number;
+  /** Always holds at least one monster. */
+  monsters: Monster[];
+  nextMonsterId: number;
 }
 
 export interface DieRoll {
@@ -66,6 +75,7 @@ export type LogType =
   | 'roll'
   | 'turn'
   | 'combatStart'
+  | 'combatMonsters'
   | 'combatEnd'
   | 'host'
   | 'rights'
@@ -85,7 +95,7 @@ export interface LogEntry {
   playerId: string | null;
   playerName: string | null;
   playerAvatar: string | null;
-  /** Level or gear change, die result, or new win level, depending on `type`. */
+  /** Level or gear change, die result, monster count or win level, depending on `type`. */
   value: number | null;
   /** Which stat an `undo` entry reverted. */
   stat: 'level' | 'gear' | null;
@@ -123,13 +133,10 @@ export type Action =
   | { type: 'nextTurn' }
   | { type: 'setTurn'; playerId: string }
   | { type: 'startCombat'; fighterId: string; monsterLevel: number }
-  | {
-      type: 'updateCombat';
-      helperId?: string | null;
-      monsterLevel?: number;
-      playerBonus?: number;
-      monsterBonus?: number;
-    }
+  | { type: 'updateCombat'; helperId?: string | null; playerBonus?: number }
+  | { type: 'addMonster' }
+  | { type: 'removeMonster'; monsterId: number }
+  | { type: 'changeMonster'; monsterId: number; stat: 'level' | 'bonus'; delta: number }
   | { type: 'endCombat' }
   | { type: 'setEditRights'; editRights: EditRights }
   | { type: 'setWinLevel'; winLevel: number }
@@ -143,6 +150,9 @@ export type ActionError =
   | 'tableFull'
   | 'hostCannotLeave'
   | 'noCombat'
+  | 'monsterNotFound'
+  | 'tooManyMonsters'
+  | 'lastMonster'
   | 'combatInProgress'
   | 'cannotUndo';
 

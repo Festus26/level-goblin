@@ -43,6 +43,25 @@ async function openSettings(page: Page) {
   await page.getByRole('button', { name: 'Settings' }).click();
 }
 
+test('monsters and fight rolls reach every phone', async ({ browser }) => {
+  const [ada, bo] = [await phone(browser), await phone(browser)];
+  const code = await createSession(ada.page, 'Ada');
+  await joinByLink(bo.page, code, 'Bo');
+  await ada.page.getByRole('button', { name: 'Fight' }).click();
+  await ada.page.getByRole('button', { name: 'Start fight' }).click();
+  await bo.page.getByRole('button', { name: 'Fight' }).click();
+
+  await bo.page.getByRole('button', { name: 'Add a monster' }).click();
+  await bo.page.getByRole('button', { name: 'Increase Bonus for Monster 2' }).click();
+  await expect(ada.page.locator('.fight-score strong').nth(1)).toHaveText('3');
+
+  await ada.page.getByRole('dialog').getByRole('button', { name: 'Roll' }).click();
+  await expect(
+    bo.page.getByRole('dialog').getByRole('button', { name: /^Rolled \d$/ }),
+  ).toBeVisible();
+  await Promise.all([ada.context.close(), bo.context.close()]);
+});
+
 test('three phones stay in sync', async ({ browser }) => {
   const [ada, bo, cy] = [await phone(browser), await phone(browser), await phone(browser)];
   const code = await createSession(ada.page, 'Ada');

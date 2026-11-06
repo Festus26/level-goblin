@@ -7,6 +7,7 @@ import {
   type ActionContext,
   type ActionError,
   type ActionResult,
+  type Combat,
   type EditRights,
   type GameState,
   type LogEntry,
@@ -37,6 +38,22 @@ export function createGame(options: NewGameOptions = {}): GameState {
   };
 }
 
+/** Saved fights from before a fight could hold several monsters. */
+type OldCombat = Omit<Combat, 'monsters' | 'nextMonsterId'> & {
+  monsterLevel: number;
+  monsterBonus: number;
+};
+
+function upgradeCombat(combat: Combat | OldCombat | null): Combat | null {
+  if (combat === null || 'monsters' in combat) return combat;
+  const { monsterLevel, monsterBonus, ...rest } = combat;
+  return {
+    ...rest,
+    monsters: [{ id: 1, level: monsterLevel, bonus: monsterBonus }],
+    nextMonsterId: 2,
+  };
+}
+
 /** Fills in fields added since a game was saved, so old saves keep working. */
 export function upgradeGame(state: GameState): GameState {
   const withAvatar = (player: Player): Player => ({
@@ -47,6 +64,7 @@ export function upgradeGame(state: GameState): GameState {
     ...state,
     players: state.players.map(withAvatar),
     departed: (state.departed ?? []).map(withAvatar),
+    combat: upgradeCombat(state.combat),
   };
 }
 
@@ -104,7 +122,10 @@ export function combatResult(state: GameState): CombatResult | null {
     (fighter ? strength(fighter) : 0) +
     (helper ? strength(helper) : 0) +
     combat.playerBonus;
-  const monsterTotal = combat.monsterLevel + combat.monsterBonus;
+  const monsterTotal = combat.monsters.reduce(
+    (total, monster) => total + monster.level + monster.bonus,
+    0,
+  );
   return { playerTotal, monsterTotal, playersWin: playerTotal > monsterTotal };
 }
 
@@ -358,9 +379,9 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
         combat: {
           fighterId: fighter.id,
           helperId: null,
-          monsterLevel: action.monsterLevel,
           playerBonus: 0,
-          monsterBonus: 0,
+          monsters: [{ id: 1, level: action.monsterLevel, bonus: 0 }],
+          nextMonsterId: 2,
         },
       };
       return {
@@ -387,12 +408,56 @@ function reduce(state: GameState, action: Action, ctx: ActionContext): ActionRes
           combat: {
             ...state.combat,
             helperId: helperId === undefined ? state.combat.helperId : helperId,
-            monsterLevel: action.monsterLevel ?? state.combat.monsterLevel,
             playerBonus: action.playerBonus ?? state.combat.playerBonus,
-            monsterBonus: action.monsterBonus ?? state.combat.monsterBonus,
           },
         },
       };
+    }
+
+    case 'addMonster': {
+      const { combat } = state;
+      if (!combat) return fail('noCombat');
+      if (combat.monsters.length >= LIMITS.maxMonsters) return fail('tooManyMonsters');
+      const monsters = [...combat.monsters, { id: combat.nextMonsterId, level: 1, bonus: 0 }];
+      const next: GameState = {
+        ...state,
+        combat: { ...combat, monsters, nextMonsterId: combat.nextMonsterId + 1 },
+      };
+      return {
+        ok: true,
+        state: addLog(next, ctx, 'combatMonsters', { value: monsters.length }),
+      };
+    }
+
+    case 'removeMonster': {
+      const { combat } = state;
+      if (!combat) return fail('noCombat');
+      const monsters = combat.monsters.filter((monster) => monster.id !== action.monsterId);
+      if (monsters.length === combat.monsters.length) return fail('monsterNotFound');
+      if (monsters.length === 0) return fail('lastMonster');
+      return {
+        ok: true,
+        state: addLog({ ...state, combat: { ...combat, monsters } }, ctx, 'combatMonsters', {
+          value: monsters.length,
+        }),
+      };
+    }
+
+    // Sends a change rather than a new value, so quick taps from two phones all count.
+    case 'changeMonster': {
+      const { combat } = state;
+      if (!combat) return fail('noCombat');
+      const { monsterId, stat, delta } = action;
+      if (!combat.monsters.some((monster) => monster.id === monsterId)) {
+        return fail('monsterNotFound');
+      }
+      const min = stat === 'level' ? 1 : -LIMITS.maxCombatValue;
+      const monsters = combat.monsters.map((monster) =>
+        monster.id === monsterId
+          ? { ...monster, [stat]: clamp(monster[stat] + delta, min, LIMITS.maxCombatValue) }
+          : monster,
+      );
+      return { ok: true, state: { ...state, combat: { ...combat, monsters } } };
     }
 
     case 'endCombat': {

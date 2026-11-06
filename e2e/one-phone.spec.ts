@@ -141,6 +141,34 @@ test('a game saved before leaving existed still loads', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Bring Bo back' })).toBeVisible();
 });
 
+test('fights several monsters, each with its own bonus, and rolls in the fight', async ({ page }) => {
+  await startGame(page, ['Ada', 'Bo']);
+  await page.getByRole('button', { name: 'Fight' }).click();
+  await page.getByRole('button', { name: 'Start fight' }).click();
+  const fight = page.getByRole('dialog', { name: 'Fight' });
+  const total = fight.locator('.fight-score strong').nth(1);
+  await expect(total).toHaveText('1');
+  await expect(fight.getByRole('button', { name: 'Remove Monster 1' })).toHaveCount(0);
+
+  await fight.getByRole('button', { name: 'Add a monster' }).click();
+  await fight.getByRole('button', { name: 'Increase Level for Monster 2' }).click();
+  await fight.getByRole('button', { name: 'Increase Bonus for Monster 2' }).click();
+  await fight.getByRole('button', { name: 'Decrease Bonus for Monster 1' }).click();
+  await expect(total).toHaveText('3');
+  await expect(fight.getByText('2 monsters')).toBeVisible();
+  await expect(fight.getByRole('status')).toHaveText('Monsters are winning');
+
+  await fight.getByRole('button', { name: 'Remove Monster 1' }).click();
+  await expect(total).toHaveText('3');
+  await expect(fight.locator('.fight-monster')).toHaveCount(1);
+  await expect(fight.getByRole('heading', { name: 'Monster 1' })).toBeVisible();
+
+  await fight.getByRole('button', { name: 'Roll' }).click();
+  await expect(fight.getByRole('button', { name: /^Rolled \d$/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('button', { name: /^Rolled \d$/ })).toBeVisible();
+});
+
 test('picks a portrait, and it shows on the table and in the log', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'English' }).click();

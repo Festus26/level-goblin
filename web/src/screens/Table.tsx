@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { canMoveTurn, findPlayer, type ActionError } from '@level-goblin/shared';
-import { Art, Die } from '../components/Art.tsx';
+import { Art } from '../components/Art.tsx';
 import { Avatar, PlayerAvatar } from '../components/Avatar.tsx';
 import { FightSheet } from '../components/FightSheet.tsx';
 import { InviteSheet } from '../components/InviteSheet.tsx';
 import { LogSheet } from '../components/LogSheet.tsx';
 import { PlayerCard } from '../components/PlayerCard.tsx';
+import { RollButton } from '../components/RollButton.tsx';
 import { SettingsSheet } from '../components/SettingsSheet.tsx';
 import { WinSheet } from '../components/WinSheet.tsx';
 import type { GameHandle } from '../game/handle.ts';
@@ -34,7 +35,6 @@ export function Table({ game, showInvite = false, onLeave, onLeft, onEnd }: Tabl
   const [celebrated, setCelebrated] = useState(state.winnerId);
   const turnPlayer = findPlayer(state, state.turnPlayerId);
   const winner = findPlayer(state, state.winnerId);
-  const { lastRoll } = state;
   const closeSheet = () => setSheet(null);
 
   useEffect(() => {
@@ -97,16 +97,7 @@ export function Table({ game, showInvite = false, onLeave, onLeft, onEnd }: Tabl
       </ul>
 
       <nav className="action-bar">
-        <button
-          type="button"
-          className="button primary"
-          onClick={() => dispatch({ type: 'rollDie' })}
-        >
-          <span key={lastRoll?.at} className="roll-art">
-            <Die value={lastRoll?.value ?? 5} />
-          </span>
-          {lastRoll ? t('table.rolled', { value: lastRoll.value }) : t('table.roll')}
-        </button>
+        <RollButton game={game} primary />
         <button type="button" className="button" onClick={() => setSheet('fight')}>
           <Art name="sword" />
           {t('table.fight')}

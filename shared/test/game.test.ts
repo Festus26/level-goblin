@@ -316,7 +316,12 @@ describe('combat', () => {
   });
 
   it('adds monster bonuses, including negative ones', () => {
-    const state = run(fight(8), { type: 'updateCombat', monsterBonus: -4 });
+    const state = run(fight(8), {
+      type: 'changeMonster',
+      monsterId: 1,
+      stat: 'bonus',
+      delta: -4,
+    });
     expect(combatResult(state)?.monsterTotal).toBe(4);
   });
 
@@ -339,12 +344,79 @@ describe('combat', () => {
     );
   });
 
+  it('adds up every monster, each with its own bonus', () => {
+    let state = run(fight(5), { type: 'addMonster' });
+    state = run(state, { type: 'changeMonster', monsterId: 2, stat: 'level', delta: 6 });
+    state = run(state, { type: 'changeMonster', monsterId: 2, stat: 'bonus', delta: 3 });
+    state = run(state, { type: 'changeMonster', monsterId: 1, stat: 'bonus', delta: -2 });
+    expect(state.combat?.monsters).toEqual([
+      { id: 1, level: 5, bonus: -2 },
+      { id: 2, level: 7, bonus: 3 },
+    ]);
+    expect(combatResult(state)?.monsterTotal).toBe(13);
+  });
+
+  it('removes one monster and never reuses its id', () => {
+    let state = run(fight(5), { type: 'addMonster' });
+    state = run(state, { type: 'removeMonster', monsterId: 1 });
+    state = run(state, { type: 'addMonster' });
+    expect(state.combat?.monsters.map((monster) => monster.id)).toEqual([2, 3]);
+    expect(combatResult(state)?.monsterTotal).toBe(2);
+  });
+
+  it('logs the monster count when it changes', () => {
+    const state = run(fight(5), { type: 'addMonster' });
+    expect(state.log.at(-1)).toMatchObject({ type: 'combatMonsters', value: 2 });
+  });
+
+  it('always keeps one monster in the fight', () => {
+    expect(errorOf(fight(5), { type: 'removeMonster', monsterId: 1 }, null)).toBe('lastMonster');
+  });
+
+  it('caps the number of monsters', () => {
+    let state = fight(5);
+    for (let count = 1; count < LIMITS.maxMonsters; count++) {
+      state = run(state, { type: 'addMonster' });
+    }
+    expect(errorOf(state, { type: 'addMonster' }, null)).toBe('tooManyMonsters');
+  });
+
+  it('keeps a monster at level 1 or higher', () => {
+    const state = run(fight(2), { type: 'changeMonster', monsterId: 1, stat: 'level', delta: -5 });
+    expect(state.combat?.monsters[0]?.level).toBe(1);
+  });
+
+  it('rejects monster changes that have nothing to act on', () => {
+    const change = { type: 'changeMonster', monsterId: 9, stat: 'level', delta: 1 } as const;
+    expect(errorOf(fight(5), change, null)).toBe('monsterNotFound');
+    expect(errorOf(fight(5), { type: 'removeMonster', monsterId: 9 }, null)).toBe(
+      'monsterNotFound',
+    );
+    expect(errorOf(table(), change, null)).toBe('noCombat');
+    expect(errorOf(table(), { type: 'addMonster' }, null)).toBe('noCombat');
+    expect(errorOf(table(), { type: 'removeMonster', monsterId: 1 }, null)).toBe('noCombat');
+  });
+
+  it('upgrades a fight saved with a single monster', () => {
+    const { monsters: _monsters, nextMonsterId: _next, ...rest } = fight(6).combat!;
+    const old = { ...fight(6), combat: { ...rest, monsterLevel: 6, monsterBonus: 2 } };
+    const upgraded = upgradeGame(old as unknown as GameState);
+    expect(combatResult(upgraded)?.monsterTotal).toBe(8);
+    expect(run(upgraded, { type: 'addMonster' }).combat?.monsters.map(({ id }) => id)).toEqual([
+      1, 2,
+    ]);
+  });
+
   it('lets any seated player meddle, whatever the edit rights', () => {
     let state = createGame({ hostId: 'ada', editRights: 'own' });
     state = run(state, { type: 'addPlayer', id: 'ada', name: 'Ada', color: 'gold' });
     state = run(state, { type: 'addPlayer', id: 'bo', name: 'Bo', color: 'red' });
     state = run(state, { type: 'startCombat', fighterId: 'ada', monsterLevel: 2 });
-    expect(errorOf(state, { type: 'updateCombat', monsterBonus: 5 }, 'bo')).toBeNull();
+    expect(errorOf(state, { type: 'updateCombat', playerBonus: 5 }, 'bo')).toBeNull();
+    expect(errorOf(state, { type: 'addMonster' }, 'bo')).toBeNull();
+    expect(
+      errorOf(state, { type: 'changeMonster', monsterId: 1, stat: 'bonus', delta: 5 }, 'bo'),
+    ).toBeNull();
   });
 
   it('reports no result outside a fight, and rejects ending one', () => {
@@ -492,6 +564,9 @@ describe('parseAction', () => {
     ['a win level below the minimum', { type: 'setWinLevel', winLevel: 1 }],
     ['an oversized combat value', { type: 'updateCombat', playerBonus: 5000 }],
     ['a bad helper id', { type: 'updateCombat', helperId: 7 }],
+    ['a bad monster id', { type: 'removeMonster', monsterId: 'x' }],
+    ['a bad monster stat', { type: 'changeMonster', monsterId: 1, stat: 'gear', delta: 1 }],
+    ['a zero monster change', { type: 'changeMonster', monsterId: 1, stat: 'level', delta: 0 }],
   ])('rejects %s', (_label, input) => {
     expect(parseAction(input)).toBeNull();
   });
