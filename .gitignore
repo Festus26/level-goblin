@@ -6,6 +6,3 @@ dist/
 *.log
 test-results/
 playwright-report/
-
-# Private drafts, kept out of the public repo.
-docs/
